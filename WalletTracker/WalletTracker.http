@@ -1,0 +1,6 @@
+@WalletTracker_HostAddress = http://localhost:5032
+
+GET {{WalletTracker_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
