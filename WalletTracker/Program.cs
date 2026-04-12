@@ -1,9 +1,17 @@
 
+using Domain.Contracts;
+using Domain.Entities;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.OpenApi.Writers;
+using Persistence.Data.Contexts;
+using Persistence.Data.DBInitializer;
+
 namespace WalletTracker
 {
     public class Program
     {
-        public static void Main(string[] args)
+        public static async Task Main(string[] args)
         {
             var builder = WebApplication.CreateBuilder(args);
 
@@ -14,7 +22,51 @@ namespace WalletTracker
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen();
 
+            #region Register services
+
+            var ConnectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+            builder.Services.AddDbContext<AppDbContext>(options =>
+            {
+                options.UseSqlServer(ConnectionString);
+            });
+
+            builder.Services.AddIdentity<User, IdentityRole<int>>(options =>
+            {
+                // Lockout settings (Prevents Brute Force)
+                options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(5);
+                options.Lockout.MaxFailedAccessAttempts = 5;
+
+                // User settings
+                options.User.RequireUniqueEmail = true;
+            })
+            .AddEntityFrameworkStores<AppDbContext>()
+            .AddDefaultTokenProviders();
+
+
+            builder.Services.AddScoped<IDbInitializer, DbInitializer>();
+            #endregion
+
+
             var app = builder.Build();
+
+            #region Self-Healing DB
+            using (var scope = app.Services.CreateScope())
+            {
+                try
+                {
+                    var services = scope.ServiceProvider;
+                    var dbInitializer = services.GetRequiredService<IDbInitializer>();
+                    await dbInitializer.InitializeAsync();
+                    Console.WriteLine("Database initialized and seeded successfully!");
+
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"An error occurred during migration: {ex.Message}");
+                }
+            }
+            
+            #endregion
 
             // Configure the HTTP request pipeline.
             if (app.Environment.IsDevelopment())
