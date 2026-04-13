@@ -14,12 +14,7 @@ namespace Persistence.Data.Configurations
     {
         public void Configure(EntityTypeBuilder<User> builder)
         {
-            builder.ComplexProperty(u => u.Balance, b =>
-                {
-                    b.Property(m => m.Amount).HasColumnType("decimal(18,2)");
-                    b.Property(m => m.Currency).HasMaxLength(3);
-                    b.Property(m => m.Currency).HasDefaultValue("EGP");
-                });
+            builder.ComplexProperty(t => t.Balance, m => m.ConfigureMoney("Balance"));
         }
     }
 }

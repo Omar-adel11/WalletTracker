@@ -25,19 +25,7 @@ namespace Persistence.Data.Configurations
 
             builder.HasQueryFilter(b => !b.IsDisabled);
 
-            builder.ComplexProperty(b => b.Limit, a =>
-             {
-                 a.Property(m => m.Amount).HasColumnType("decimal(18,2)");
-                 a.Property(m => m.Currency).HasMaxLength(3);
-                 a.Property(m => m.Currency).HasDefaultValue("EGP");
-             });
-
-            builder.ComplexProperty(b => b.Spent, a =>
-            {
-                a.Property(m => m.Amount).HasColumnType("decimal(18,2)");
-                a.Property(m => m.Currency).HasMaxLength(3);
-                a.Property(m => m.Currency).HasDefaultValue("EGP");
-            });
+           
         }
     }
 }

@@ -33,12 +33,7 @@ namespace Persistence.Data.Configurations
                    .HasFilter("[IsDeleted] = 0");
 
 
-            builder.ComplexProperty(t => t.Amount, a =>
-            {
-               a.Property(m => m.Amount).HasColumnType("decimal(18,2)");
-                a.Property(m => m.Currency).HasMaxLength(3);
-                a.Property(m => m.Currency).HasDefaultValue("EGP");
-            });
+            builder.ComplexProperty(t => t.Amount, m => m.ConfigureMoney("Amount"));
         }
     }
 }

@@ -18,19 +18,9 @@ namespace Persistence.Data.Configurations
                    .HasForeignKey(i => i.UserId)
                    .OnDelete(DeleteBehavior.Cascade);
 
-            builder.ComplexProperty(i => i.Amount, a =>
-            {
-                a.Property(m => m.Amount).HasColumnType("decimal(18,2)");
-                a.Property(m => m.Currency).HasMaxLength(3);
-                a.Property(m => m.Currency).HasDefaultValue("EGP");
-            });
+            builder.ComplexProperty(t => t.Amount, m => m.ConfigureMoney("Amount"));
 
-            builder.ComplexProperty(i => i.Price, a =>
-            {
-                a.Property(m => m.Amount).HasColumnType("decimal(18,2)");
-                a.Property(m => m.Currency).HasMaxLength(3);
-                a.Property(m => m.Currency).HasDefaultValue("EGP");
-            });
+            builder.ComplexProperty(t => t.Price, m => m.ConfigureMoney("Price"));
         }
     }
 }
