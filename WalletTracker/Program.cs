@@ -6,6 +6,8 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Writers;
 using Persistence.Data.Contexts;
 using Persistence.Data.DBInitializer;
+using Persistence.Interceptors;
+using Persistence.Repository;
 
 namespace WalletTracker
 {
@@ -25,6 +27,11 @@ namespace WalletTracker
             #region Register services
 
             var ConnectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+
+            builder.Services.AddSingleton<SoftDeleteInterceptor>();
+            builder.Services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>));
+            builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
+
             builder.Services.AddDbContext<AppDbContext>(options =>
             {
                 options.UseSqlServer(ConnectionString);

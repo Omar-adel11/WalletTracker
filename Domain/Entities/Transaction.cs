@@ -3,11 +3,12 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Domain.Contracts;
 using Domain.Entities.Struct;
 
 namespace Domain.Entities
 {
-    public class Transaction : BaseEntity
+    public class Transaction : BaseEntity , ISoftDeletable
     {
         public Money Amount { get; set; }
         public string? Description { get; set; } 
