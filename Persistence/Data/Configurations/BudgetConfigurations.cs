@@ -25,7 +25,9 @@ namespace Persistence.Data.Configurations
 
             builder.HasQueryFilter(b => !b.IsDisabled);
 
-           
+            builder.ComplexProperty(t => t.Limit, m => m.ConfigureMoney("Limit"));
+            builder.ComplexProperty(t => t.Spent, m => m.ConfigureMoney("Spent"));
+
         }
     }
 }
