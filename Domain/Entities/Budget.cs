@@ -9,6 +9,7 @@ namespace Domain.Entities
 {
     public class Budget : BaseEntity
     {
+        public string Name { get; set; } = null!;
         public Money Limit { get; set; }
         public Money Spent { get; set; }
         public bool IsDisabled { get; set; }

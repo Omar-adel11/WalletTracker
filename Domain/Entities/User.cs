@@ -13,7 +13,7 @@ namespace Domain.Entities
     {
         public string FirstName { get; set; } = string.Empty;
         public string LastName { get; set; } = string.Empty;
-        public Money Balance { get; private set; }
+        
         public DateTimeOffset CreatedAt { get ; set ; }
         public DateTimeOffset UpdatedAt { get; set; }
 
@@ -23,18 +23,7 @@ namespace Domain.Entities
         public ICollection<ItemToBuy>? ItemsToBuy { get; set; } = new HashSet<ItemToBuy>();
         public ICollection<Budget>? Budgets { get; set; } = new HashSet<Budget>();
         public ICollection<Installments>? Installments { get; set; } = new HashSet<Installments>();
-
-        public void Deposit(Money amount)
-        {
-            Balance += amount;
-            UpdatedAt = DateTimeOffset.UtcNow;
-        }
-        public void Withdraw(Money amount)
-        {
-            Balance -= amount;
-            UpdatedAt = DateTimeOffset.UtcNow;
-        }
-
+        public ICollection<Wallet> Wallets { get; set; } = null!;
 
     }
 }

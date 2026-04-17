@@ -5,19 +5,16 @@ using System.Text;
 using System.Threading.Tasks;
 using Domain.Entities.Struct;
 
-namespace Domain.Entities
+namespace ServiceAbstraction.DTOs.ItemToBuyDTOs
 {
-    public class ItemToBuy : BaseEntity
+    public class CreateItemToBuyDTO
     {
+        
+        public int UserId { get; set; }
+        public int categoryId { get; set; }
+        public int walletId { get; set; }
         public string Name { get; set; } = string.Empty;
         public Money Price { get; set; }
         public Money Amount { get; set; }
-        public bool IsAchieved { get; set; }
-
-        //Navigation properties
-        public int UserId { get; set; }
-        public User User { get; set; } = null!; 
-
-
     }
 }

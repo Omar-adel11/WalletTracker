@@ -31,6 +31,7 @@ namespace Persistence.Data.Contexts
         {
             base.OnConfiguring(optionsBuilder);
             optionsBuilder.AddInterceptors(_softDeleteInterceptor);
+            
 
         }
     }

@@ -22,7 +22,7 @@ namespace Persistence.Data.Configurations
                    .WithMany(c => c.Installments)
                    .HasForeignKey(i => i.CategoryId)
                    .OnDelete(DeleteBehavior.SetNull);
-
+            builder.Property(i => i.NoOfPaidInstallments).HasDefaultValue(0);
 
 
             builder.ComplexProperty(t => t.Amount, m => m.ConfigureMoney("Amount"));

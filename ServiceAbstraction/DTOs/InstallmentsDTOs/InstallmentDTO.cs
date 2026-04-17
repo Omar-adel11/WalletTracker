@@ -5,9 +5,9 @@ using System.Text;
 using System.Threading.Tasks;
 using Domain.Entities.Struct;
 
-namespace Domain.Entities
+namespace ServiceAbstraction.DTOs.InstallmentsDTOs
 {
-    public class Installments : BaseEntity
+    public class InstallmentDTO
     {
         public Money Amount { get; set; }
         public string? Description { get; set; }
@@ -16,14 +16,7 @@ namespace Domain.Entities
         public DateTimeOffset LastDate { get; set; }
         public int? NoOfPaidInstallments { get; set; } = 0;
         public string? To { get; set; }
-        //Navigateion properties
-        public int UserId { get; set; }
-        public User User { get; set; } = null!;
-
-        public int? CategoryId { get; set; }
-        public Category? Category { get; set; } = null!;
-
-        public ICollection<Transaction>? transactions { get; set; } = new HashSet<Transaction>();
+        public string? Category { get; set; }
 
     }
 }
