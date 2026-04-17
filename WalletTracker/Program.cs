@@ -8,6 +8,8 @@ using Persistence.Data.Contexts;
 using Persistence.Data.DBInitializer;
 using Persistence.Interceptors;
 using Persistence.Repository;
+using Service.Mapping.Budget;
+using Service.Mapping.Wallet;
 
 namespace WalletTracker
 {
@@ -49,6 +51,8 @@ namespace WalletTracker
             .AddEntityFrameworkStores<AppDbContext>()
             .AddDefaultTokenProviders();
 
+
+            builder.Services.AddAutoMapper(typeof(BudgetProfile).Assembly);
 
             builder.Services.AddScoped<IDbInitializer, DbInitializer>();
             #endregion

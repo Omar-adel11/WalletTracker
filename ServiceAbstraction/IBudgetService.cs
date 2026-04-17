@@ -9,9 +9,11 @@ namespace ServiceAbstraction
 {
     public interface IBudgetService
     {
-        Task<IEnumerable<BudgetDTO>> GetBudgetsByUserId(int userId);
-        Task<int> CreateBudget(int userId, decimal amount, int categoryId);
-        Task<int> DeleteBudget(int budgetId);
-        Task<int> UpdateBudget(int budgetId, decimal? newAmount, int? newCategoryId);
+        Task<IEnumerable<BudgetDTO>> GetBudgetsByUserIdAsync(int userId);
+        Task<BudgetDTO> GetBudgetAsync(int BudgetId);
+        Task<int> SpendAsync(int budgetId, decimal amount);
+        Task<BudgetDTO> CreateBudgetAsync(int userId, decimal amount, int categoryId);
+        Task DeleteBudgetAsync(int budgetId);
+        Task UpdateBudgetAsync(int budgetId, decimal? newAmount, int? newCategoryId);
     }
 }

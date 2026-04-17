@@ -17,6 +17,11 @@ namespace Persistence.Data.Configurations
             builder.HasOne(b=> b.User)
                 .WithMany(u => u.Budgets)
                 .HasForeignKey(b => b.UserId)
+                .OnDelete(DeleteBehavior.NoAction);
+
+            builder.HasOne(b=> b.Wallet)
+                .WithMany(w => w.Budgets)
+                .HasForeignKey(b => b.WalletId)
                 .OnDelete(DeleteBehavior.Cascade);
 
             builder.HasOne(b => b.Category)

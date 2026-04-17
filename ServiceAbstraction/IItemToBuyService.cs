@@ -9,10 +9,10 @@ namespace ServiceAbstraction
 {
     public interface IItemToBuyService
     {
-        Task<IEnumerable<ItemToBuyDTO>> GetAllItemsToBuy(int UserId);
-        Task<int> AddItem(CreateItemToBuyDTO createItemToBuy);
-        Task<int> DeleteItem(int itemId);
-        Task<int> UpdateItem(UpdateItemToBuyDTO updateItemToBuyDTO);
-        Task<int> SaveMoney(int itemId, decimal saved, int walletId);
+        Task<IEnumerable<ItemToBuyDTO>> GetAllItemsToBuyAsync(int UserId);
+        Task<ItemToBuyDTO> AddItemAsync(CreateItemToBuyDTO createItemToBuy);
+        Task DeleteItemAsync(int itemId);
+        Task UpdateItemAsync(UpdateItemToBuyDTO updateItemToBuyDTO);
+        Task<int> SaveMoneyASync(int itemId, decimal saved, int walletId);
     }
 }

@@ -10,9 +10,10 @@ namespace ServiceAbstraction
 {
     public interface IWalletService
     {
-        Task<IEnumerable<WalletDTO>> GetAllWallets(int userId);
-        Task<Money> GetBalanceAsync(int userId,int WalletId);
-        Task<bool> TransactionBetweenWalletAsync(int fromWalletId, int toWalletId, decimal amount);
-        Task<int> UpdateBalanceAsync(int userId, Money newBalance);
+        Task<IEnumerable<WalletDTO>> GetAllWalletsAsync(int userId);
+        Task<Money> GetBalanceAsync(int WalletId);
+        Task TransactionBetweenWalletAsync(int fromWalletId, int toWalletId, Money amount);
+        Task DepositAsync(int walletId, Money amount);
+        Task WithdrawAsync(int walletId, Money amount);
     }
 }

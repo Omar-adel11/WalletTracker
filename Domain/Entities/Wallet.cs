@@ -56,6 +56,8 @@ namespace Domain.Entities
 
         //Navegation properties
         public ICollection<Transaction>? Transactions { get; set; } = new HashSet<Transaction>();
+        public ICollection<ItemToBuy>? ItemsToBuy { get; set; } = new HashSet<ItemToBuy>();
+        public ICollection<Budget>? Budgets { get; set; } = new HashSet<Budget>();
     }
 
 

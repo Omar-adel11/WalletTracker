@@ -17,6 +17,10 @@ namespace Domain.Entities
         //Navigation properties
         public int UserId { get; set; }
         public User User { get; set; } = null!; 
+        public int WalletId { get; set; }
+        public Wallet Wallet { get; set; } = null!; 
+        public int? CategoryId { get; set; }
+        public Category Category { get; set; } = null!; 
 
 
     }

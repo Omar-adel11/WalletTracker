@@ -8,11 +8,11 @@ namespace ServiceAbstraction.DTOs.InstallmentsDTOs
 {
     public class CreateInstallmentDTO
     {
-        public int userId { get; set; }
-        public int walletId { get; set; }
-        public decimal amount { get; set; }
-        public string? description { get; set; }
-        public int categoryId { get; set; }
+        public int UserId { get; set; }
+        public int WalletId { get; set; }
+        public decimal Amount { get; set; }
+        public string? Description { get; set; }
+        public int CategoryId { get; set; }
         public DateTimeOffset StartDate { get; set; }
         public DateTimeOffset EndDate { get; set; }
         public int? NoOfPaidInstallments { get; set; }

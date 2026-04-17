@@ -11,8 +11,8 @@ namespace ServiceAbstraction.DTOs.ItemToBuyDTOs
     {
         
         public int UserId { get; set; }
-        public int categoryId { get; set; }
-        public int walletId { get; set; }
+        public int CategoryId { get; set; }
+        public int WalletId { get; set; }
         public string Name { get; set; } = string.Empty;
         public Money Price { get; set; }
         public Money Amount { get; set; }
