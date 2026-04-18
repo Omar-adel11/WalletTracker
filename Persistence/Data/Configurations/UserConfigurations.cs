@@ -14,7 +14,11 @@ namespace Persistence.Data.Configurations
     {
         public void Configure(EntityTypeBuilder<User> builder)
         {
-            builder.ComplexProperty(t => t.Balance, m => m.ConfigureMoney("Balance"));
+            builder.HasMany(U => U.Wallets)
+                   .WithOne(W => W.user)
+                   .HasForeignKey( W => W.UserId )
+                   .OnDelete(DeleteBehavior.Cascade);
+
         }
     }
 }

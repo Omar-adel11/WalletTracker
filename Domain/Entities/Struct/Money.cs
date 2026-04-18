@@ -12,13 +12,13 @@ namespace Domain.Entities.Struct
         public static Money operator +(Money a, Money b)
         {
             if (a.Currency != b.Currency)
-                throw new CurrencyMismatchException("add");
+                throw new CurrencyMismatchException();
             return new Money(a.Amount + b.Amount, a.Currency);
         }
         public static Money operator -(Money a, Money b)
         {
             if(a.Currency != b.Currency)
-                throw new CurrencyMismatchException("Subtract");
+                throw new CurrencyMismatchException();
             return new Money(a.Amount - b.Amount, a.Currency);
         }
         public override string ToString()

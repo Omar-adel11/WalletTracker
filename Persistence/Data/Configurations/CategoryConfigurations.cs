@@ -29,31 +29,31 @@ namespace Persistence.Data.Configurations
             {
                 id = 1, // Manual ID is required for HasData
                 Name = "Food & Drinks",
-                CreatedAt = DateTimeOffset.UtcNow
+                CreatedAt = new DateTimeOffset(2026, 4, 13, 9, 1, 2, TimeSpan.Zero)
             },
             new Category
             {
                 id = 2,
                 Name = "Transportation",
-                CreatedAt = DateTimeOffset.UtcNow
+                CreatedAt = new DateTimeOffset(2026, 4, 13, 9, 1, 2, TimeSpan.Zero)
             },
             new Category
             {
                 id = 3,
                 Name = "Shopping",
-                CreatedAt = DateTimeOffset.UtcNow
+                CreatedAt = new DateTimeOffset(2026, 4, 13, 9, 1, 2, TimeSpan.Zero)
             },
             new Category
             {
                 id = 4,
                 Name = "Housing & Utilities",
-                CreatedAt = DateTimeOffset.UtcNow
+                CreatedAt = new DateTimeOffset(2026, 4, 13, 9, 1, 2, TimeSpan.Zero)
             },
             new Category
             {
                 id = 5,
                 Name = "Entertainment",
-                CreatedAt = DateTimeOffset.UtcNow
+                CreatedAt = new DateTimeOffset(2026, 4, 13, 9, 1, 2, TimeSpan.Zero)
             }
         };
         }

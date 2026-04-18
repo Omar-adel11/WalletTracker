@@ -4,17 +4,20 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Domain.Contracts;
+using Domain.Entities.Enum;
 using Domain.Entities.Struct;
 
 namespace Domain.Entities
 {
     public class Transaction : BaseEntity , ISoftDeletable
     {
+
         public Money Amount { get; set; }
+        public TransactionType Type { get; set; }
         public string? Description { get; set; } 
         public DateTimeOffset Date {  get; set; }
         public bool IsDeleted { get; set; }
-
+        public MoneySource MoneySource { get;set; } = MoneySource.Cash;
         //Navigation properties
         public int UserId { get; set; }
         public User User { get; set; } = null!;
@@ -24,6 +27,9 @@ namespace Domain.Entities
 
         public int? InstallmentsId { get; set; }
         public Installments? Installment {  get; set; } 
+
+        public int  WalletId { get; set; }
+        public Wallet Wallet { get; set; } = null!;
 
     }
 }

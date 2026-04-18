@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using System.Transactions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
+using Persistence.Data.Configurations.Extensions;
 
 namespace Persistence.Data.Configurations
 {
@@ -16,6 +17,11 @@ namespace Persistence.Data.Configurations
             builder.HasOne(t => t.User)
                    .WithMany(u => u.Transactions)
                    .HasForeignKey(t => t.UserId);
+
+            builder.HasOne(t => t.Wallet)
+                   .WithMany(w => w.Transactions)
+                    .HasForeignKey(t => t.WalletId)
+                    .OnDelete(DeleteBehavior.NoAction);
 
             builder.HasOne(c => c.Category)
                    .WithMany(u => u.Transactions)

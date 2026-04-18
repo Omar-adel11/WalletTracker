@@ -17,6 +17,7 @@ namespace Domain.Entities
         public ICollection<Transaction>? Transactions { get; set; } = new HashSet<Transaction>();
         public ICollection<Budget>? Budgets { get; set; } = new HashSet<Budget>();
         public ICollection<Installments>? Installments { get; set; } = new HashSet<Installments>();
+        public ICollection<ItemToBuy>? ItemsToBuy { get; set; } = new HashSet<ItemToBuy>();
 
     }
 }

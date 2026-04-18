@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
+using Persistence.Data.Configurations.Extensions;
 
 namespace Persistence.Data.Configurations
 {
@@ -22,7 +23,7 @@ namespace Persistence.Data.Configurations
                    .WithMany(c => c.Installments)
                    .HasForeignKey(i => i.CategoryId)
                    .OnDelete(DeleteBehavior.SetNull);
-
+            builder.Property(i => i.NoOfPaidInstallments).HasDefaultValue(0);
 
 
             builder.ComplexProperty(t => t.Amount, m => m.ConfigureMoney("Amount"));
