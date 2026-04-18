@@ -6,7 +6,9 @@ using System.Threading.Tasks;
 
 namespace ServiceAbstraction.DTOs.Auth
 {
-    internal class UserLoginDTO
+    public class UserLoginDTO
     {
+        public string Email { get; set; } = string.Empty;
+        public string Password { get; set; } = string.Empty;
     }
 }

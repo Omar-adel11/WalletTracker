@@ -23,6 +23,7 @@ namespace Domain.Exceptions.NullReferenceException
     public sealed class UserNullException(int UserId) : NullException($"User with Id : {UserId} is not found.")
     {
     }
+    
     public sealed class ItemNullException(int Id) : NullException($"Item with Id : {Id} is not found.")
     {
     }
@@ -47,4 +48,5 @@ namespace Domain.Exceptions.NullReferenceException
     public sealed class InstallmetnsNullException(int UserId) : NullException($"Transactions with UserId : {UserId} is not found.")
     {
     }
+    
 }
