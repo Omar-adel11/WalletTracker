@@ -3,13 +3,16 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using ServiceAbstraction.DTOs.CategoryDtos;
 
 namespace ServiceAbstraction
 {
     public interface ICategoryService
     {
-        Task<int> CreateCategory(string name);
-        Task<int> DeleteCategory(int CategoryId);
-        Task<int> UpdateCategory(int CategoryId, string newName);
+        Task<ICollection<CategoryDto>> GetAllCategoriesAsync(int? UserId = null);
+        Task<CategoryDto> GetCategoryByIdAsync(int id);
+        Task<CategoryDto> CreateCategoryAsync(string name, int? UserId = null);
+        Task DeleteCategoryAsync(int CategoryId);
+        Task UpdateCategoryAsync(int CategoryId, string newName);
     }
 }

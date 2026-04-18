@@ -6,7 +6,10 @@ using System.Threading.Tasks;
 
 namespace ServiceAbstraction.DTOs.BudgetDTOs
 {
-    internal class UpdateBudgetDTO
+    public class UpdateBudgetDTO
     {
+        public int Id { get; set; }
+        public decimal? Amount { get; set; }
+        public int? CategoryId { get; set; }
     }
 }

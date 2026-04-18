@@ -13,11 +13,13 @@ namespace Service.Mapping.Transaction
         public TransactionProfile()
         {
             CreateMap<Domain.Entities.Transaction,TransactionDTO>().ForMember(d => d.Category, s => s.MapFrom(src => src.Category.Name)); ;
-            CreateMap<CreateTransactionDTO, Domain.Entities.Transaction>().ReverseMap();
+            CreateMap<CreateTransactionDTO, Domain.Entities.Transaction>().ReverseMap()
+                     .ForMember(dest => dest.source,opt => opt.Ignore());
             CreateMap<UpdateTransactionDTO, Domain.Entities.Transaction>().ReverseMap()
-                     .ForAllMembers(opts => opts.Condition ((src, DestinationMemberNamingConvention, srcMember) => srcMember != null) );
+                     .ForAllMembers(opts => opts.Condition((src, DestinationMemberNamingConvention, srcMember) => srcMember != null));
+                     
 
-          
+
         }
     }
 }

@@ -8,7 +8,7 @@ using Domain.Entities.Struct;
 
 namespace Domain.Entities
 {
-    public class Wallet
+    public class Wallet : BaseEntity
     {
         public int id {  get; set; }
         public string Currency { get; set; } = "EGP";

@@ -13,7 +13,8 @@ namespace Service.Mapping.Wallet
     {
         public WalletProfile()
         {
-            CreateMap<Domain.Entities.Wallet, WalletDTO>();
+            CreateMap<Domain.Entities.Wallet, WalletDTO>().ReverseMap();
+            CreateMap<Domain.Entities.Wallet, CreateWalletDTO>().ReverseMap();
             
         }
     }

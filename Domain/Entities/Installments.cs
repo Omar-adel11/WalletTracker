@@ -16,6 +16,8 @@ namespace Domain.Entities
         public DateTimeOffset LastDate { get; set; }
         public int? NoOfPaidInstallments { get; set; } = 0;
         public string? To { get; set; }
+        public int totalInstallments => ((EndDate.Year - StartDate.Year) * 12) + EndDate.Month - StartDate.Month + 1;
+        public bool IsDone { get; set; } = false;
         //Navigateion properties
         public int UserId { get; set; }
         public User User { get; set; } = null!;

@@ -4,9 +4,12 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace ServiceAbstraction.DTOs
+namespace ServiceAbstraction.DTOs.CategoryDtos
 {
-    internal class CategoryDto
+    public class CategoryDto
     {
+        public int Id { get; set; }
+        public int? UserId { get; set; } = null;
+        public string Name { get; set; }
     }
 }

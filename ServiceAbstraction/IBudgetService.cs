@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Domain.Entities.Enum;
 using ServiceAbstraction.DTOs.BudgetDTOs;
 
 namespace ServiceAbstraction
@@ -11,9 +12,9 @@ namespace ServiceAbstraction
     {
         Task<IEnumerable<BudgetDTO>> GetBudgetsByUserIdAsync(int userId);
         Task<BudgetDTO> GetBudgetAsync(int BudgetId);
-        Task<int> SpendAsync(int budgetId, decimal amount);
-        Task<BudgetDTO> CreateBudgetAsync(int userId, decimal amount, int categoryId);
+        Task<bool> SpendAsync(int budgetId, decimal amount, MoneySource source);
+        Task<BudgetDTO> CreateBudgetAsync(CreateBudgetDTO createBudgetDTO);
         Task DeleteBudgetAsync(int budgetId);
-        Task UpdateBudgetAsync(int budgetId, decimal? newAmount, int? newCategoryId);
+        Task UpdateBudgetAsync(UpdateBudgetDTO updateBudgetDTO);
     }
 }

@@ -6,7 +6,11 @@ using System.Threading.Tasks;
 
 namespace ServiceAbstraction.DTOs.BudgetDTOs
 {
-    internal class CreateBudgetDTO
+    public class CreateBudgetDTO
     {
+        public int UserId { get; set; }
+        public decimal Amount { get; set; }
+        public int CategoryId { get; set; }
+        public int WalletId { get; set; }
     }
 }

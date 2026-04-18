@@ -10,9 +10,10 @@ namespace Domain.Contracts
 {
     public interface IGenericRepository<T> where T : class , IAduitable
     {
-        Task<T?> GetByIdAsync(int id);
+        Task<T?> GetByIdAsync(int id, params Expression<Func<T, object>>[] includes);
         Task<IReadOnlyList<T>> GetAllAsync(params Expression<Func<T, object>>[] includes);
         Task<IReadOnlyList<T>> GetAsync(Expression<Func<T,bool>> Predicate, params Expression<Func<T, object>>[] includes);
+        Task<IReadOnlyList<T>> GetAsyncFilteredWithPaginate(Expression<Func<T,bool>> Predicate, int? pageNumber = 1, int? pageSize = 10, params Expression<Func<T, object>>[] includes);
         Task AddAsync(T entity);
         void Update(T entity);
         void Delete(T entity);

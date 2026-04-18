@@ -17,7 +17,7 @@ namespace Domain.Entities
         public string? Description { get; set; } 
         public DateTimeOffset Date {  get; set; }
         public bool IsDeleted { get; set; }
-
+        public MoneySource MoneySource { get;set; } = MoneySource.Cash;
         //Navigation properties
         public int UserId { get; set; }
         public User User { get; set; } = null!;
