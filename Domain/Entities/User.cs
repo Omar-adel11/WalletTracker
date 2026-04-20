@@ -17,6 +17,8 @@ namespace Domain.Entities
         public DateTimeOffset CreatedAt { get ; set ; }
         public DateTimeOffset UpdatedAt { get; set; }
 
+        public string? PictureUrl { get; set; }
+
         //Navigation properties
         public ICollection<Category>? Categories { get; set; } = new HashSet<Category>();
         public ICollection<Transaction>? Transactions { get; set; } = new HashSet<Transaction>();

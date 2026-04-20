@@ -4,9 +4,10 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace ServiceAbstraction.DTOs.Helper
+namespace ServiceAbstraction.Helper.Email
 {
-    internal interface IEmailService
+    public interface IEmailService
     {
+        Task SendEmailAsync(Email email);
     }
 }

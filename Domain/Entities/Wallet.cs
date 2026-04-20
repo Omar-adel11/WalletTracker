@@ -13,9 +13,9 @@ namespace Domain.Entities
         public int id {  get; set; }
         public string Currency { get; set; } = "EGP";
         public decimal TotalBalance => Cash + Credit + Pended;
-        public decimal Cash { get; set; }
-        public decimal Credit { get; set; }
-        public decimal Pended { get; set; }
+        public decimal Cash { get; set; } = 0;
+        public decimal Credit { get; set; } = 0;
+        public decimal Pended { get; set; } = 0;
 
         public DateTimeOffset UpdatedAt { get; set; }
         public DateTimeOffset CreatedAt { get; set; }

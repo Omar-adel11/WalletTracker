@@ -6,7 +6,15 @@ using System.Threading.Tasks;
 
 namespace Domain.Exceptions.BadRequestException
 {
-    internal class BadRequestExceptions
+    public abstract class BadRequestException(string message) : Exception(message)
+    {
+    }
+
+    public sealed class RegisterationBadRequestException(IEnumerable<string> Error) : BadRequestException(string.Join(",", Error))
+    {
+    }
+
+    public sealed class CurrentPasswordBadRequestException() : BadRequestException("CurrentPassword is not correct")
     {
     }
 }
