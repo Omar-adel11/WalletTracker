@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using AutoMapper;
 using Domain.Contracts;
 using Domain.Entities;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Configuration;
 using ServiceAbstraction;
@@ -29,9 +30,9 @@ namespace Service
             IMapper mapper,
             UserManager<User> userManager,
             IConfiguration config,
-            IEmailService emailService) // EmailService injected from DI
+            IEmailService emailService, IWebHostEnvironment _environment) // EmailService injected from DI
         {
-            _authService = new Lazy<IAuthenticationService>(() => new AuthenticationService(mapper, userManager, config, emailService));
+            _authService = new Lazy<IAuthenticationService>(() => new AuthenticationService(mapper, userManager, config, emailService, unitOfWork,_environment));
             _emailService = new Lazy<IEmailService>(() => emailService);
             _walletService = new Lazy<IWalletService>(() => new WalletService(unitOfWork, mapper));
             _transactionService = new Lazy<ITransactionService>(() => new TransactionService(unitOfWork, mapper));

@@ -11,6 +11,7 @@ using Domain.Entities;
 using Domain.Exceptions.AuthExceptions;
 using Domain.Exceptions.BadRequestException;
 using Domain.Exceptions.NullReferenceException;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
@@ -24,7 +25,8 @@ namespace Service
         UserManager<User> _userManager,
         IConfiguration _config,
         IEmailService _emailService,
-        IUnitOfWork unitOfWork) : IAuthenticationService
+        IUnitOfWork unitOfWork,
+        IWebHostEnvironment _environment) : IAuthenticationService
     {
         public async Task<UserDTO> LogInAsync(UserLoginDTO userLoginDTO)
         {
@@ -38,6 +40,7 @@ namespace Service
             {
                 Email = user.Email,
                 UserName = user.UserName,
+                PictureUrl = user.PictureUrl,
                 Token = token
             };
 
@@ -50,6 +53,8 @@ namespace Service
             var IsUserNameExist = await _userManager.FindByNameAsync(userSignUpDTO.UserName) != null;
             if (IsUserNameExist) throw new UserNameExistException();
             var user = _mapper.Map<User>(userSignUpDTO);
+
+            user.PictureUrl = Helper.DocumentSettings.UploadFile(userSignUpDTO.file, _environment.WebRootPath, "images");
             var result = await _userManager.CreateAsync(user, userSignUpDTO.Password);
             if (!result.Succeeded)
                 throw new RegisterationBadRequestException(result.Errors.Select(E => E.Description));
@@ -67,6 +72,7 @@ namespace Service
             {
                 Email = user.Email,
                 UserName = user.UserName,
+                PictureUrl = user.PictureUrl,
                 Token = token
             };
         }
@@ -79,6 +85,7 @@ namespace Service
             {
                 Email = user.Email,
                 UserName = user.UserName,
+                PictureUrl = user.PictureUrl,
                 Token = token
             };
         }
@@ -173,6 +180,33 @@ namespace Service
             );
 
             return new JwtSecurityTokenHandler().WriteToken(token);
+        }
+
+        public async Task<UserDTO?> UpdateUserAsync(UpdateUserDTO UpdateUserDTO)
+        {
+            var user = await _userManager.FindByEmailAsync(UpdateUserDTO.Email);
+            if (user is null) throw new UserNotFoundNullException();
+            user.UserName = UpdateUserDTO.UserName ?? user.UserName;
+            if (UpdateUserDTO.file != null)
+            {
+                if(user.PictureUrl != null)
+                {
+                    Helper.DocumentSettings.DeleteFile(user.PictureUrl, _environment.WebRootPath,"images");
+                }
+                user.PictureUrl = Helper.DocumentSettings.UploadFile(UpdateUserDTO.file, _environment.WebRootPath, "images");
+            }
+            user.PhoneNumber = UpdateUserDTO.PhoneNumber ?? user.PhoneNumber;
+
+            var result = await _userManager.UpdateAsync(user);
+            if (!result.Succeeded)
+                throw new RegisterationBadRequestException(result.Errors.Select(E => E.Description));
+            return new UserDTO
+            {
+                Email = user.Email,
+                UserName = user.UserName,
+                PictureUrl = user.PictureUrl,
+                Token = await GenerateTokenAsync(user)
+             };
         }
     }
 }

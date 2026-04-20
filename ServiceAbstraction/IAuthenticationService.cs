@@ -12,6 +12,7 @@ namespace ServiceAbstraction
         Task<UserDTO> LogInAsync(UserLoginDTO userLoginDTO);
         Task<UserDTO> SignUpAsync(UserSignUpDTO userLoginDTO);
         Task<UserDTO?> GetUserAsync(string Email);
+        Task<UserDTO?> UpdateUserAsync(UpdateUserDTO UpdateUserDTO);
         Task<bool> CheckEmailExistence(string Email);
         Task<bool> ForgetPassword(string Email);
         Task<string> VerifyOtpAsync(string Email, string otp);
