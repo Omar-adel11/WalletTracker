@@ -9,7 +9,6 @@ namespace ServiceAbstraction.DTOs.Auth
 {
     public class UpdateUserDTO
     {
-        public string Email { get; set; } = string.Empty;
         public string? UserName { get; set; }
         public IFormFile? file { get; set; }
         public string? PhoneNumber { get; set; }

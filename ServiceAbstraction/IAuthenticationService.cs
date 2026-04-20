@@ -12,12 +12,12 @@ namespace ServiceAbstraction
         Task<UserDTO> LogInAsync(UserLoginDTO userLoginDTO);
         Task<UserDTO> SignUpAsync(UserSignUpDTO userLoginDTO);
         Task<UserDTO?> GetUserAsync(string Email);
-        Task<UserDTO?> UpdateUserAsync(UpdateUserDTO UpdateUserDTO);
+        Task<UserDTO?> UpdateUserAsync(string email, UpdateUserDTO UpdateUserDTO);
         Task<bool> CheckEmailExistence(string Email);
-        Task<bool> ForgetPassword(string Email);
-        Task<string> VerifyOtpAsync(string Email, string otp);
-        Task<bool> resetPassword(string resetToken,string Email,string newPassword); //to use otp to reset password
-        Task<bool> ChangePassword(string email,string oldPassword, string newPassword);
+        Task<string> ForgetPassword(string Email);
+        Task<string> VerifyOtpAsync(VerifyOTPDTO verifyOTPDTO);
+        Task<string> resetPassword(ResetPasswordDTO resetPasswordDTO); //to use otp to reset password
+        Task<string> ChangePassword(string email,ChangePasswordDto changePasswordDto);
         
     }
 }
