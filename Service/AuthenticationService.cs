@@ -173,7 +173,7 @@ namespace Service
                 issuer: _config["Jwt:Issuer"],
                 audience: _config["Jwt:Audience"],
                 expires: DateTime.UtcNow.AddDays(
-                double.Parse(_config["Jwt:DurationInMinutes"]!)
+                double.Parse(_config["Jwt:DurationInDays"]!)
             ),
                 signingCredentials: creds,
                 claims: claims
