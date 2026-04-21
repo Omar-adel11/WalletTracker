@@ -33,7 +33,7 @@ namespace Service
             var user = await _userManager.FindByEmailAsync(userLoginDTO.Email);
             if (user is null) throw new UserNotFoundNullException();
             var isPasswordValid = await _userManager.CheckPasswordAsync(user, userLoginDTO.Password);
-            if(!isPasswordValid) throw new UnAuthorizedException("Invalid Email or password.");
+            if (!isPasswordValid) throw new UnAuthorizedException("Invalid Email or password.");
 
             var token = await GenerateTokenAsync(user);
             return new UserDTO
@@ -79,7 +79,7 @@ namespace Service
         public async Task<UserDTO?> GetUserAsync(string Email)
         {
             var user = await _userManager.FindByEmailAsync(Email);
-            if(user is null) throw new UserNotFoundNullException();
+            if (user is null) throw new UserNotFoundNullException();
             var token = await GenerateTokenAsync(user);
             return new UserDTO
             {
@@ -95,103 +95,75 @@ namespace Service
             return await _userManager.FindByEmailAsync(Email) != null;
         }
 
-        public async Task<bool> ChangePassword(string Email,string oldPassword, string newPassword)
+        public async Task<string> ChangePassword(string email ,ChangePasswordDto changePasswordDto)
         {
-            var user = await _userManager.FindByEmailAsync(Email);
+            var user = await _userManager.FindByEmailAsync(email);
             if (user is null) throw new UserNotFoundNullException();
-            var isMatch = await _userManager.CheckPasswordAsync(user, oldPassword);
+            var isMatch = await _userManager.CheckPasswordAsync(user, changePasswordDto.oldPassword);
             if (!isMatch) throw new CurrentPasswordBadRequestException();
-            var result = await _userManager.ChangePasswordAsync(user, oldPassword, newPassword);
+            var result = await _userManager.ChangePasswordAsync(user, changePasswordDto.oldPassword, changePasswordDto.newPassword);
             if (!result.Succeeded)
                 throw new RegisterationBadRequestException(result.Errors.Select(E => E.Description));
-            return true;
+            return "Password changed successfully.";
         }
 
-        public async Task<bool> ForgetPassword(string Email)
+        public async Task<string> ForgetPassword(string Email)
         {
             var user = await _userManager.FindByEmailAsync(Email);
-           
-            if (user is null) throw new UserNotFoundNullException();
 
-            
-            var otp = await _userManager.GenerateTwoFactorTokenAsync(user, "Email");
-            
-
-            var emailModel = new Email
+            if (user is not null)
             {
-                To = Email,
-                Subject = "Your WalletTracker Reset Code",
-                Body = $"<h1>Reset Your Password</h1><p>Your 4-digit code is: <b>{otp}</b></p>"
-            };
+                var otp = await _userManager.GenerateTwoFactorTokenAsync(user, "Email");
 
-            await _emailService.SendEmailAsync(emailModel);
-            return true;
+
+                var emailModel = new Email
+                {
+                    To = Email,
+                    Subject = "Your WalletTracker Reset Code",
+                    Body = $"<h1>Reset Your Password</h1><p>Your 4-digit code is: <b>{otp}</b></p>"
+                };
+
+                await _emailService.SendEmailAsync(emailModel);
+                return "If the email exists, a reset code has been sent.";
+            }
+            else
+                throw new UserNotFoundNullException();
         }
 
-        public async Task<string> VerifyOtpAsync(string Email, string otp)
+        public async Task<string> VerifyOtpAsync(VerifyOTPDTO verifyOTPDTO)
         {
-            var user = await _userManager.FindByEmailAsync(Email);
+            var user = await _userManager.FindByEmailAsync(verifyOTPDTO.Email);
             if (user is null) throw new UserNotFoundNullException();
 
-            var isValid = await _userManager.VerifyTwoFactorTokenAsync(user, "Email", otp);
+            var isValid = await _userManager.VerifyTwoFactorTokenAsync(user, "Email", verifyOTPDTO.OTP);
             if (!isValid) throw new UnAuthorizedException("Invalid or expired OTP.");
 
-            
+
             return await _userManager.GeneratePasswordResetTokenAsync(user);
         }
-        public async Task<bool> resetPassword(string resetToken, string Email, string newPassword)
+        public async Task<string> resetPassword(ResetPasswordDTO resetPasswordDTO)
         {
-            var user = await _userManager.FindByEmailAsync(Email);
+            var user = await _userManager.FindByEmailAsync(resetPasswordDTO.Email);
             if (user is null) throw new UserNotFoundNullException();
 
-            var result = await _userManager.ResetPasswordAsync(user, resetToken, newPassword);
+            var result = await _userManager.ResetPasswordAsync(user, resetPasswordDTO.ResetToken, resetPasswordDTO.Password );
 
             if (!result.Succeeded)
                 throw new RegisterationBadRequestException(result.Errors.Select(e => e.Description));
 
-            return true;
+            return "Password Reset successfuly";
         }
 
-        private async Task<string> GenerateTokenAsync(User user)
+        public async Task<UserDTO?> UpdateUserAsync(string Email,UpdateUserDTO UpdateUserDTO)
         {
-            var claims = new List<Claim>();
-            claims.Add(new Claim(ClaimTypes.Email, user.Email));
-            claims.Add(new Claim(ClaimTypes.Name, user.UserName));
-            claims.Add(new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()));
-            var roles = await _userManager.GetRolesAsync(user); 
-            foreach(var role in roles)
-            {
-                claims.Add(new Claim(ClaimTypes.Role, role.ToString()));
-            }
-
-            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_config["Jwt:Key"]!));
-
-            var creds = new SigningCredentials(key,SecurityAlgorithms.HmacSha256);
-
-            var token = new JwtSecurityToken
-            (
-                issuer: _config["Jwt:Issuer"],
-                audience: _config["Jwt:Audience"],
-                expires: DateTime.UtcNow.AddDays(
-                double.Parse(_config["Jwt:DurationInDays"]!)
-            ),
-                signingCredentials: creds,
-                claims: claims
-            );
-
-            return new JwtSecurityTokenHandler().WriteToken(token);
-        }
-
-        public async Task<UserDTO?> UpdateUserAsync(UpdateUserDTO UpdateUserDTO)
-        {
-            var user = await _userManager.FindByEmailAsync(UpdateUserDTO.Email);
+            var user = await _userManager.FindByEmailAsync(Email);
             if (user is null) throw new UserNotFoundNullException();
             user.UserName = UpdateUserDTO.UserName ?? user.UserName;
             if (UpdateUserDTO.file != null)
             {
-                if(user.PictureUrl != null)
+                if (user.PictureUrl != null)
                 {
-                    Helper.DocumentSettings.DeleteFile(user.PictureUrl, _environment.WebRootPath,"images");
+                    Helper.DocumentSettings.DeleteFile(user.PictureUrl, _environment.WebRootPath, "images");
                 }
                 user.PictureUrl = Helper.DocumentSettings.UploadFile(UpdateUserDTO.file, _environment.WebRootPath, "images");
             }
@@ -206,7 +178,38 @@ namespace Service
                 UserName = user.UserName,
                 PictureUrl = user.PictureUrl,
                 Token = await GenerateTokenAsync(user)
-             };
+            };
+        }
+
+
+        private async Task<string> GenerateTokenAsync(User user)
+        {
+            var claims = new List<Claim>();
+            claims.Add(new Claim(ClaimTypes.Email, user.Email));
+            claims.Add(new Claim(ClaimTypes.Name, user.UserName));
+            claims.Add(new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()));
+            var roles = await _userManager.GetRolesAsync(user);
+            foreach (var role in roles)
+            {
+                claims.Add(new Claim(ClaimTypes.Role, role.ToString()));
+            }
+
+            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_config["Jwt:Key"]!));
+
+            var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
+
+            var token = new JwtSecurityToken
+            (
+                issuer: _config["Jwt:Issuer"],
+                audience: _config["Jwt:Audience"],
+                expires: DateTime.UtcNow.AddDays(
+                double.Parse(_config["Jwt:DurationInDays"]!)
+            ),
+                signingCredentials: creds,
+                claims: claims
+            );
+
+            return new JwtSecurityTokenHandler().WriteToken(token);
         }
     }
 }

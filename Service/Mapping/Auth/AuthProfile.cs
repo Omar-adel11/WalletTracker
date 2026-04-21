@@ -14,9 +14,16 @@ namespace Service.Mapping.Auth
         public AuthProfile()
         {
             CreateMap<User, UserDTO>()
-                .ForMember(dest => dest.Token, opt => opt.Ignore()).ReverseMap();
-            CreateMap<UserSignUpDTO, User>();
-            
+                .ForMember(dest => dest.Token, opt => opt.Ignore());
+
+           
+            CreateMap<UserSignUpDTO, User>()
+                .ForMember(dest => dest.PictureUrl, opt => opt.Ignore());
+
+            CreateMap<UpdateUserDTO, User>()
+                .ForMember(dest => dest.PictureUrl, opt => opt.Ignore())
+                .ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null));
+
         }
     }
 }

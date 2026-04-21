@@ -1,9 +1,12 @@
 
 using System.Text;
+using AutoMapper;
 using Domain.Contracts;
 using Domain.Entities;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Writers;
 using Persistence.Data.Contexts;
@@ -65,8 +68,8 @@ namespace WalletTracker
             #region Auth
             builder.Services.AddAuthentication(options =>
             {
-                options.DefaultAuthenticateScheme = "JwtBearer";
-                options.DefaultChallengeScheme = "JwtBearer";
+                options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+                options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
             }).AddJwtBearer(options =>
             {
                 options.SaveToken = true;
@@ -91,6 +94,7 @@ namespace WalletTracker
             builder.Services.AddTransient<IEmailService, EmailService>();
             #endregion
 
+
             #region Application Services
             builder.Services.AddScoped<IAuthenticationService, AuthenticationService>();
             builder.Services.AddScoped<IWalletService, WalletService>();
@@ -101,6 +105,8 @@ namespace WalletTracker
             builder.Services.AddScoped<IInstallmentsService, InstallmentsService>();
             builder.Services.AddScoped<IServiceManager, ServiceManager>();
             #endregion
+
+           
 
             var app = builder.Build();
 
@@ -130,7 +136,7 @@ namespace WalletTracker
                 app.UseSwaggerUI();
             }
             app.UseStaticFiles();
-            app.UseHttpsRedirection();
+            app.UseHttpsRedirection();  
 
             app.UseAuthentication();
             app.UseAuthorization();
