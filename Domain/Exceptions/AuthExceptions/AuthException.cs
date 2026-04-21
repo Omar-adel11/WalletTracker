@@ -17,10 +17,5 @@ namespace Domain.Exceptions.AuthExceptions
     {
     }
 
-    public sealed class EmailExistException() : AuthException("Email is already Exist")
-    {
-    }
-    public sealed class UserNameExistException() : AuthException("UserName is already Exist")
-    {
-    }
+    
 }

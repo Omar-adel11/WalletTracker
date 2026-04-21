@@ -25,7 +25,7 @@ namespace Service
         public async Task<CategoryDto> GetCategoryByIdAsync(int id)
         {
             var category = await _repo.GetByIdAsync(id);
-            if (category is null) throw new CategoryNullException(id);
+            if (category is null) throw new EntityNotFoundException("Category");
             var categoryDto = _mapper.Map<CategoryDto>(category);
             return categoryDto;
         }
@@ -45,7 +45,7 @@ namespace Service
         public async Task DeleteCategoryAsync(int CategoryId)
         {
             var category = await _repo.GetByIdAsync(CategoryId);
-            if (category is null) throw new CategoryNullException(CategoryId);
+            if (category is null) throw new EntityNotFoundException("Category");
 
             _repo.Delete(category);
             await _unitOfWork.CompleteAsync();
@@ -56,7 +56,7 @@ namespace Service
         public async Task UpdateCategoryAsync(int CategoryId, string newName)
         {
             var category = await _repo.GetByIdAsync(CategoryId);
-            if (category is null) throw new CategoryNullException(CategoryId);
+            if (category is null) throw new EntityNotFoundException("Category");
 
             category.Name = newName;
             category.UpdatedAt = DateTimeOffset.UtcNow;

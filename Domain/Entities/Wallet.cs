@@ -10,15 +10,12 @@ namespace Domain.Entities
 {
     public class Wallet : BaseEntity
     {
-        public int id {  get; set; }
         public string Currency { get; set; } = "EGP";
         public decimal TotalBalance => Cash + Credit + Pended;
         public decimal Cash { get; set; } = 0;
         public decimal Credit { get; set; } = 0;
         public decimal Pended { get; set; } = 0;
 
-        public DateTimeOffset UpdatedAt { get; set; }
-        public DateTimeOffset CreatedAt { get; set; }
 
         public int UserId { get; set; }
         public User user { get; set; } = new User();

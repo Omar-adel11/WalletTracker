@@ -21,7 +21,7 @@ namespace Service
         public async Task<TransactionDTO> GetTransactionByIdAsync(int Id)
         {
             var transaction = await _repo.GetByIdAsync(Id, t => t.Wallet!, t => t.Category!);
-            if (transaction is null) throw new TransactionNullException(Id);
+            if (transaction is null) throw new EntityNotFoundException("transaction");
             return _mapper.Map<TransactionDTO>(transaction);
 
         }
@@ -35,7 +35,7 @@ namespace Service
         t => t.Wallet!,
         t => t.Category!);
 
-            if (!transactions.Any()) throw new TransactionsNullException(walletId);
+            if (!transactions.Any()) throw new EntityNotFoundException("Transaction");
 
             return _mapper.Map<IEnumerable<TransactionDTO>>(transactions);
 
@@ -44,7 +44,7 @@ namespace Service
         public async Task<TransactionDTO> CreateTransactionAsync(CreateTransactionDTO transactionDTO)
         {
             var wallet = await unitOfWork.Repository<Wallet>().GetByIdAsync(transactionDTO.WalletId);
-            if (wallet is null) throw new WalletNullException(transactionDTO.WalletId);
+            if (wallet is null) throw new EntityNotFoundException("wallet");
 
             // 1. Update the correct balance based on Source
             if (transactionDTO.Type == TransactionType.Income)
@@ -98,7 +98,7 @@ namespace Service
         public async Task DeleteTransactionAsync(int transactionId)
         {
             var transaction = await _repo.GetByIdAsync(transactionId);
-            if (transaction is null) throw new TransactionNullException(transactionId);
+            if (transaction is null) throw new EntityNotFoundException("transaction");
             _repo.Delete(transaction);
             await unitOfWork.CompleteAsync();
         }
@@ -107,7 +107,7 @@ namespace Service
         public async Task UpdateTransactionAsync(UpdateTransactionDTO dto)
         {
             var transaction = await _repo.GetByIdAsync(dto.Id, t => t.Wallet!);
-            if (transaction is null) throw new TransactionNullException(dto.Id);
+            if (transaction is null) throw new EntityNotFoundException("transaction");
 
             var wallet = transaction.Wallet;
             var budgetRepo = unitOfWork.Repository<Budget>();
