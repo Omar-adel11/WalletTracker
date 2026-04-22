@@ -23,7 +23,7 @@ namespace Service
             var installments = await _repo.GetAsync(i=>i.UserId ==  userId, i => i.Category!);
             if(!installments.Any())
             {
-                throw new InstallmetnsNullException(userId);
+                throw new EntityNotFoundException("installment");
             }
             var installmentsDTO = _mapper.Map<IEnumerable<InstallmentDTO>>(installments);
             return installmentsDTO;
@@ -33,7 +33,7 @@ namespace Service
         {
             var installment = await _repo.GetByIdAsync(id, i => i.Category);
             if (installment == null)
-                throw new InstallmentNullException(id);
+                throw new  EntityNotFoundException("installment");
             var installmentDTO = _mapper.Map<InstallmentDTO>(installment);
             return installmentDTO;
         }
@@ -50,7 +50,7 @@ namespace Service
         public async Task DeleteInstallmentAsync(int installmentId)
         {
             var installment =await _repo.GetByIdAsync(installmentId);
-            if (installment is null) throw new InstallmentNullException(installmentId);
+            if (installment is null) throw new EntityNotFoundException("installment");
             _repo.Delete(installment);
             await _unitOfWork.CompleteAsync();
         }
@@ -58,7 +58,7 @@ namespace Service
         public async Task UpdateInstallmentAsync(UpdateInstallmentDTO updateInstallmentDTO)
         {
             var installment = await _repo.GetByIdAsync(updateInstallmentDTO.Id,i => i.Category!);
-            if (installment is null) throw new InstallmentNullException(updateInstallmentDTO.Id);
+            if (installment is null) throw new EntityNotFoundException("installment");
             _mapper.Map(updateInstallmentDTO, installment);
             installment.UpdatedAt = DateTimeOffset.UtcNow;
             _repo.Update(installment);
@@ -69,17 +69,17 @@ namespace Service
         public async Task<bool> payInstallmentAsync(int installmentId, int wallet_id,MoneySource source)
         {
             var installment = await _repo.GetByIdAsync(installmentId,i=>i.Category!);
-            if (installment is null) throw new InstallmentNullException(installmentId);
+            if (installment is null) throw new EntityNotFoundException("installment");
 
             int totalInstallments = ((installment.EndDate.Year - installment.StartDate.Year) * 12)
                             + installment.EndDate.Month - installment.StartDate.Month + 1;
             if (installment.IsDone)
             {
-                throw new AllInstallmentsPaidException(installmentId);
+                throw new EntityNotFoundException("installment");
             }
 
             var wallet = await _unitOfWork.Repository<Wallet>().GetByIdAsync(wallet_id);
-            if (wallet is null) throw new WalletNullException(wallet_id);
+            if (wallet is null) throw new EntityNotFoundException("wallet");
 
             if(installment.Amount.Currency != wallet.Currency) throw new CurrencyMismatchException();
 

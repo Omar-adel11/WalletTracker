@@ -22,7 +22,7 @@ namespace Service
         public async Task<IEnumerable<WalletDTO>> GetAllWalletsAsync(int userId)
         {
             var wallets = await _repo.GetAsync(w => w.UserId == userId);
-            if(!wallets.Any()) throw new WalletsNullException(userId);
+            if(!wallets.Any()) throw new EntityNotFoundException("Wallet");
             var walletDTOs = _mapper.Map<IEnumerable<WalletDTO>>(wallets);
             return walletDTOs;
         }
@@ -30,7 +30,7 @@ namespace Service
         public async Task<Money> GetBalanceAsync(int WalletId)
         {
             var wallet = await _repo.GetByIdAsync(WalletId);
-            if(wallet is null) throw new WalletNullException(WalletId);
+            if(wallet is null) throw new EntityNotFoundException("Wallet");
             var Money = new Money
             {
                 Amount = wallet.TotalBalance,
@@ -50,8 +50,8 @@ namespace Service
         public async Task DepositAsync(int walletId, Money amount, MoneySource moneySource)
         {
             var wallet = await _repo.GetByIdAsync(walletId,w=>w.Transactions!);
-            if (wallet is null) throw new WalletNullException(walletId);
-            if(wallet.Currency != amount.Currency) throw new CurrencyMismatchException();
+            if (wallet is null) throw new EntityNotFoundException("Wallet");
+            if (wallet.Currency != amount.Currency) throw new CurrencyMismatchException();
             var IsCash = moneySource == MoneySource.Cash ;
             var IsCredit = moneySource == MoneySource.Credit;
             if(!IsCash && !IsCredit) throw new InvalidSourceException(moneySource.ToString());
@@ -82,7 +82,7 @@ namespace Service
         public async Task WithdrawAsync(int walletId, Money amount, MoneySource moneySource)
         {
             var wallet = await _repo.GetByIdAsync(walletId, w => w.Transactions!);
-            if (wallet is null) throw new WalletNullException(walletId);
+            if (wallet is null) throw new EntityNotFoundException("Wallet");
             if (wallet.Currency != amount.Currency) throw new CurrencyMismatchException();
 
             var IsCash = moneySource == MoneySource.Cash;
@@ -115,9 +115,9 @@ namespace Service
         public async Task TransactionBetweenWalletAsync(int fromWalletId, int toWalletId, Money amount, MoneySource moneySource)
         {
             var fromWallet = await _repo.GetByIdAsync(fromWalletId, w => w.Transactions!);
-            if (fromWallet is null) throw new WalletNullException(fromWalletId);
+            if (fromWallet is null) throw new EntityNotFoundException("Wallet");
             var toWallet = await _repo.GetByIdAsync(toWalletId, w => w.Transactions!);
-            if (toWallet is null) throw new WalletNullException(toWalletId);
+            if (toWallet is null) throw new EntityNotFoundException("Wallet");
 
             if(fromWallet.Currency != toWallet.Currency) throw new CurrencyMismatchException();
             var IsCash = moneySource == MoneySource.Cash;

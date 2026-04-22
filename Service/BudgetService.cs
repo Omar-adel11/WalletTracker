@@ -31,7 +31,7 @@ namespace Service
         public async Task DeleteBudgetAsync(int budgetId)
         {
             var budget = await _repo.GetByIdAsync(budgetId);
-            if(budget is null) throw new BudgetNullException(budgetId);
+            if(budget is null) throw new EntityNotFoundException("Budget");
             _repo.Delete(budget);
             await _unitOfWork.CompleteAsync();
         }
@@ -39,7 +39,7 @@ namespace Service
         public async Task<BudgetDTO> GetBudgetAsync(int BudgetId)
         {
             var budget = await _repo.GetByIdAsync(BudgetId, b => b.Category!, b => b.Wallet!);
-            if (budget is null) throw new BudgetNullException(BudgetId);
+            if (budget is null) throw new EntityNotFoundException("Budget");
             var budgetDTO = _mapper.Map<BudgetDTO>(budget);
             return budgetDTO;
         }
@@ -48,7 +48,7 @@ namespace Service
         {
             var budgets = await _repo.GetAsync(b => b.UserId == userId,
                                                b=>b.Category!,b => b.Wallet!);
-            if (!budgets.Any()) throw new BudgetsNullException(userId);
+            if (!budgets.Any()) throw new EntityNotFoundException("Budget");
             var budgetDTOs = _mapper.Map<IEnumerable<BudgetDTO>>(budgets);
             return budgetDTOs;
         }
@@ -57,7 +57,7 @@ namespace Service
         {
             // 1. Fetch budget with Wallet included (to update balance)
             var budget = await _repo.GetByIdAsync(budgetId, b => b.Wallet!);
-            if (budget is null) throw new BudgetNullException(budgetId);
+            if (budget is null) throw new EntityNotFoundException("Budget");
 
             // 2. Check if the budget has enough "Room" left
             if ((budget.Limit.Amount - budget.Spent.Amount) < amount) return false;
@@ -98,7 +98,7 @@ namespace Service
         {
             // 1. Fetch the existing tracked entity
             var budget = await _repo.GetByIdAsync(updateBudgetDTO.Id);
-            if (budget is null) throw new BudgetNullException(updateBudgetDTO.Id);
+            if (budget is null) throw new EntityNotFoundException("Budget");
 
             // 2. Map the DTO values ONTO the existing tracked entity
             _mapper.Map(updateBudgetDTO, budget);

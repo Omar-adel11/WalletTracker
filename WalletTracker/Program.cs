@@ -5,6 +5,7 @@ using Domain.Contracts;
 using Domain.Entities;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
@@ -19,6 +20,9 @@ using Service.Mapping.Budget;
 using Service.Mapping.Wallet;
 using ServiceAbstraction;
 using ServiceAbstraction.Helper.Email;
+using Shared.Errors;
+using WalletTracker.Middlewares;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace WalletTracker
 {
@@ -65,6 +69,7 @@ namespace WalletTracker
 
             builder.Services.AddScoped<IDbInitializer, DbInitializer>();
             #endregion
+
             #region Auth
             builder.Services.AddAuthentication(options =>
             {
@@ -94,7 +99,6 @@ namespace WalletTracker
             builder.Services.AddTransient<IEmailService, EmailService>();
             #endregion
 
-
             #region Application Services
             builder.Services.AddScoped<IAuthenticationService, AuthenticationService>();
             builder.Services.AddScoped<IWalletService, WalletService>();
@@ -106,7 +110,30 @@ namespace WalletTracker
             builder.Services.AddScoped<IServiceManager, ServiceManager>();
             #endregion
 
-           
+            #region ValidationError
+            builder.Services.Configure<ApiBehaviorOptions>(options =>
+            {
+
+                options.InvalidModelStateResponseFactory = ActionContext =>
+                {
+                    var errors = ActionContext.ModelState.Where(m => m.Value.Errors.Any())
+                                                          .Select(m => new ValidationError()
+                                                          {
+                                                              Field = m.Key,
+                                                              Error = m.Value.Errors.Select(e => e.ErrorMessage)
+                                                          });
+                    var response = new ValidationErrorResponse()
+                    {
+                        Errors = errors
+                    };
+
+                    return new BadRequestObjectResult(response);
+                };
+               
+            });
+            #endregion
+
+
 
             var app = builder.Build();
 
@@ -136,6 +163,7 @@ namespace WalletTracker
                 app.UseSwaggerUI();
             }
             app.UseStaticFiles();
+            app.UseMiddleware<GlobalErrorHandlingMiddleware>();
             app.UseHttpsRedirection();  
 
             app.UseAuthentication();

@@ -30,7 +30,7 @@ namespace Service
         {
             var item = await _repo.GetByIdAsync(itemId, i => i.Wallet!,i => i.Category!);
 
-            if (item is null) throw new ItemNullException(itemId);
+            if (item is null) throw new EntityNotFoundException("Item");
             if(!item.IsAchieved) throw new ItemToBuyBalanceException();
 
             item.Wallet.Pended -= item.Price.Amount;
@@ -54,7 +54,7 @@ namespace Service
         public async Task DeleteItemAsync(int itemId)
         {
             var Item = await _repo.GetByIdAsync(itemId);
-            if (Item is null) throw new ItemNullException(itemId);
+            if (Item is null) throw new EntityNotFoundException("Item");
             _repo.Delete(Item);
             await _unitOfWork.CompleteAsync();
         }
@@ -62,7 +62,7 @@ namespace Service
         public async Task<IEnumerable<ItemToBuyDTO>> GetAllItemsToBuyAsync(int UserId)
         {
             var Items = await _repo.GetAsync(i => i.UserId == UserId, i => i.Category!, i => i.Wallet!);
-            if(!Items.Any()) throw new ItemsNullException(UserId);
+            if(!Items.Any()) throw new EntityNotFoundException("Item");
             return _mapper.Map<IEnumerable<ItemToBuyDTO>>(Items);
 
         }
@@ -70,14 +70,14 @@ namespace Service
         public async Task<ItemToBuyDTO> GetAllItemToBuyByIdAsync(int Id)
         {
             var Item = await _repo.GetByIdAsync(Id, i => i.Category!, i => i.Wallet!);
-            if (Item is null) throw new ItemNullException(Id);
+            if (Item is null) throw new EntityNotFoundException("Item");
             return _mapper.Map<ItemToBuyDTO>(Item);
         }
 
         public async Task<bool> SaveMoneyASync(int itemId, decimal saved, int walletId,string source)
         {
             var item = await _repo.GetByIdAsync(itemId, i => i.Wallet!);
-            if (item is null) throw new ItemNullException(itemId);
+            if (item is null) throw new EntityNotFoundException("Item");
             if (item.Wallet.id != walletId) return false;
             if(item.IsAchieved) return false; // Can't save money for an already achieved item
 
@@ -123,7 +123,7 @@ namespace Service
         public async Task UpdateItemAsync(UpdateItemToBuyDTO updateItemToBuyDTO)
         {
             var item = await _repo.GetByIdAsync(updateItemToBuyDTO.Id,i=>i.Category!,id=>id.Wallet!);
-            if(item is null) throw new ItemNullException(updateItemToBuyDTO.Id);
+            if(item is null) throw new EntityNotFoundException("Item");
             _mapper.Map(updateItemToBuyDTO, item);  
             item.UpdatedAt = DateTimeOffset.UtcNow;
             _repo.Update(item);
