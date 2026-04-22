@@ -49,7 +49,7 @@ namespace Persistence.Repository
                     result = result.Include(include);
                 }
             }
-            return await result.FirstOrDefaultAsync(e => EF.Property<int>(e, "Id") == id);
+            return await result.FirstOrDefaultAsync(e => EF.Property<int>(e, "id") == id);
         }
 
         public async Task AddAsync(T entity)
