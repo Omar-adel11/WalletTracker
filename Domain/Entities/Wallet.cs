@@ -18,7 +18,7 @@ namespace Domain.Entities
 
 
         public int UserId { get; set; }
-        public User user { get; set; } = new User();
+        public User user { get; set; } 
 
         public void Deposit(decimal amount, BalanceSource source)
         {

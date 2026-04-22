@@ -13,9 +13,10 @@ namespace ServiceAbstraction
     {
         Task<WalletDTO> CreateWalletAsync(CreateWalletDTO createWalletDTO);
         Task<IEnumerable<WalletDTO>> GetAllWalletsAsync(int userId);
-        Task<Money> GetBalanceAsync(int WalletId);
-        Task TransactionBetweenWalletAsync(int fromWalletId, int toWalletId, Money amount, MoneySource moneySource);
-        Task DepositAsync(int walletId, Money amount, MoneySource moneySource);
-        Task WithdrawAsync(int walletId, Money amount, MoneySource moneySource);
+        Task<WalletDTO> GetWalletByIdAsync(int userId, int walletId);
+        Task<Money> GetBalanceAsync(int userId, int WalletId);
+        Task TransactionBetweenWalletAsync(int userId, int fromWalletId, int toWalletId,string ToUserName, Money amount, MoneySource moneySource);
+        Task DepositAsync(int userId,int walletId, Money amount, MoneySource moneySource);
+        Task WithdrawAsync(int userId,int walletId, Money amount, MoneySource moneySource);
     }
 }

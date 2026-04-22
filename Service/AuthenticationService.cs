@@ -52,29 +52,36 @@ namespace Service
             if (IsEmailExist) throw new EmailExistException();
             var IsUserNameExist = await _userManager.FindByNameAsync(userSignUpDTO.UserName) != null;
             if (IsUserNameExist) throw new UserNameExistException();
-            var user = _mapper.Map<User>(userSignUpDTO);
+           
+                var user = _mapper.Map<User>(userSignUpDTO);
 
-            user.PictureUrl = Helper.DocumentSettings.UploadFile(userSignUpDTO.file, _environment.WebRootPath, "images");
-            var result = await _userManager.CreateAsync(user, userSignUpDTO.Password);
-            if (!result.Succeeded)
-                throw new RegisterationBadRequestException(result.Errors.Select(E => E.Description));
+                user.PictureUrl = Helper.DocumentSettings.UploadFile(userSignUpDTO.file, _environment.WebRootPath, "images");
+                var result = await _userManager.CreateAsync(user, userSignUpDTO.Password);
+                if (!result.Succeeded)
+                    throw new RegisterationBadRequestException(result.Errors.Select(E => E.Description));
 
-            var defaultWallet = new Wallet
-            {
-                UserId = user.Id,
-                CreatedAt = DateTimeOffset.UtcNow
-            };
-            await unitOfWork.Repository<Wallet>().AddAsync(defaultWallet);
-            await unitOfWork.CompleteAsync();
+                var defaultWallet = new Wallet
+                {
+                    UserId = user.Id,
+                    CreatedAt = DateTimeOffset.UtcNow
+                };
+                await unitOfWork.Repository<Wallet>().AddAsync(defaultWallet);
+                await unitOfWork.CompleteAsync();
+                Console.WriteLine($"Signup called at {DateTime.UtcNow}");
+
+
 
             var token = await GenerateTokenAsync(user);
-            return new UserDTO
-            {
-                Email = user.Email,
-                UserName = user.UserName,
-                PictureUrl = user.PictureUrl,
-                Token = token
-            };
+                return new UserDTO
+                {
+                    Email = user.Email,
+                    UserName = user.UserName,
+                    PictureUrl = user.PictureUrl,
+                    Token = token
+                };
+            
+
+           
         }
         public async Task<UserDTO?> GetUserAsync(string Email)
         {

@@ -18,7 +18,8 @@ namespace Service.Mapping.Auth
 
            
             CreateMap<UserSignUpDTO, User>()
-                .ForMember(dest => dest.PictureUrl, opt => opt.Ignore());
+                .ForMember(dest => dest.PictureUrl, opt => opt.Ignore())
+                .ForMember(dest => dest.Wallets, opt => opt.Ignore()); ;
 
             CreateMap<UpdateUserDTO, User>()
                 .ForMember(dest => dest.PictureUrl, opt => opt.Ignore())

@@ -6,6 +6,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Domain.Contracts;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Storage;
 using Persistence.Data.Contexts;
 
 namespace Persistence.Repository
@@ -16,6 +17,11 @@ namespace Persistence.Repository
         public IGenericRepository<T> Repository<T>() where T : class,IAduitable
         {
             return (IGenericRepository<T>)_repositories.GetOrAdd(typeof(T).Name,_ =>  new GenericRepository<T>(_context));
+        }
+
+        public async Task<IDbContextTransaction> BeginTransactionAsync()
+        {
+            return await _context.Database.BeginTransactionAsync();
         }
         public async Task<int> CompleteAsync() => await _context.SaveChangesAsync();
 

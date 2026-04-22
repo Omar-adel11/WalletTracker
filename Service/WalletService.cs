@@ -8,6 +8,7 @@ using Domain.Contracts;
 using Domain.Entities;
 using Domain.Entities.Enum;
 using Domain.Entities.Struct;
+using Domain.Exceptions.AuthExceptions;
 using Domain.Exceptions.MoneyInvalidOperationException;
 using Domain.Exceptions.NullReferenceException;
 using ServiceAbstraction;
@@ -27,10 +28,23 @@ namespace Service
             return walletDTOs;
         }
 
-        public async Task<Money> GetBalanceAsync(int WalletId)
+        public async Task<WalletDTO> GetWalletByIdAsync(int userId, int walletId)
+        {
+            var wallet = await _repo.GetByIdAsync(walletId);
+
+            if (wallet is null) throw new EntityNotFoundException("Wallet");
+
+            // CRITICAL: Security check
+            if (wallet.UserId != userId) throw new UnAuthorizedException("Access denied to this wallet");
+
+            return _mapper.Map<WalletDTO>(wallet);
+        }
+        public async Task<Money> GetBalanceAsync(int userId,int WalletId)
         {
             var wallet = await _repo.GetByIdAsync(WalletId);
             if(wallet is null) throw new EntityNotFoundException("Wallet");
+            if (wallet.UserId != userId) throw new UnAuthorizedException("Can't make transaction on this wallet");
+
             var Money = new Money
             {
                 Amount = wallet.TotalBalance,
@@ -47,11 +61,12 @@ namespace Service
             return _mapper.Map<WalletDTO>(wallet);
         }
 
-        public async Task DepositAsync(int walletId, Money amount, MoneySource moneySource)
+        public async Task DepositAsync(int userId,int walletId, Money amount, MoneySource moneySource)
         {
             var wallet = await _repo.GetByIdAsync(walletId,w=>w.Transactions!);
             if (wallet is null) throw new EntityNotFoundException("Wallet");
             if (wallet.Currency != amount.Currency) throw new CurrencyMismatchException();
+            if (wallet.UserId != userId) throw new UnAuthorizedException("Can't make transaction on this wallet");
             var IsCash = moneySource == MoneySource.Cash ;
             var IsCredit = moneySource == MoneySource.Credit;
             if(!IsCash && !IsCredit) throw new InvalidSourceException(moneySource.ToString());
@@ -70,7 +85,8 @@ namespace Service
                 Amount = amount,
                 Description = $"Deposit of {amount.Amount} {amount.Currency} to wallet {wallet.id}",
                 Type = TransactionType.Income,
-                CreatedAt = DateTimeOffset.UtcNow
+                CreatedAt = DateTimeOffset.UtcNow,
+                MoneySource = moneySource,
             };
             await _unitOfWork.Repository<Transaction>().AddAsync(transaction);
 
@@ -79,12 +95,12 @@ namespace Service
 
         }
 
-        public async Task WithdrawAsync(int walletId, Money amount, MoneySource moneySource)
+        public async Task WithdrawAsync(int userId,int walletId, Money amount, MoneySource moneySource)
         {
             var wallet = await _repo.GetByIdAsync(walletId, w => w.Transactions!);
             if (wallet is null) throw new EntityNotFoundException("Wallet");
             if (wallet.Currency != amount.Currency) throw new CurrencyMismatchException();
-
+            if (wallet.UserId != userId) throw new UnAuthorizedException("Can't make transaction on this wallet");
             var IsCash = moneySource == MoneySource.Cash;
             var IsCredit = moneySource == MoneySource.Credit;
             if (!IsCash && !IsCredit) throw new InvalidSourceException(moneySource.ToString());
@@ -105,21 +121,28 @@ namespace Service
                 Amount = amount,
                 Description = $"Withdraw of {amount.Amount} {amount.Currency} from wallet {wallet.id}",
                 Type = TransactionType.Expense,
-                CreatedAt = DateTimeOffset.UtcNow
+                CreatedAt = DateTimeOffset.UtcNow,
+                MoneySource = moneySource,
             };
             await _unitOfWork.Repository<Transaction>().AddAsync(transaction);
 
             await _unitOfWork.CompleteAsync();
         }
         
-        public async Task TransactionBetweenWalletAsync(int fromWalletId, int toWalletId, Money amount, MoneySource moneySource)
+        public async Task TransactionBetweenWalletAsync(int userId,int fromWalletId,int toWalletId, string ToUserName, Money amount, MoneySource moneySource)
         {
-            var fromWallet = await _repo.GetByIdAsync(fromWalletId, w => w.Transactions!);
+            var fromWallet = await _repo.GetByIdAsync(fromWalletId, w => w.Transactions!,w => w.user);
             if (fromWallet is null) throw new EntityNotFoundException("Wallet");
-            var toWallet = await _repo.GetByIdAsync(toWalletId, w => w.Transactions!);
-            if (toWallet is null) throw new EntityNotFoundException("Wallet");
+            if (fromWallet.UserId != userId) throw new UnAuthorizedException("Can't make transaction on this wallet");
 
-            if(fromWallet.Currency != toWallet.Currency) throw new CurrencyMismatchException();
+            var userList = await _unitOfWork.Repository<User>().GetAsync(u => u.UserName == ToUserName);
+            var user = userList.FirstOrDefault();
+
+            var toWallet = await _repo.GetByIdAsync(toWalletId, w => w.Transactions!);
+            if (toWallet is null) throw new EntityNotFoundException("Wallet to receieve");
+            if (user.Id != toWallet.id) throw new EntityNotFoundException($"Wallet with id {toWalletId} for that {ToUserName}");
+
+            if (fromWallet.Currency != toWallet.Currency) throw new CurrencyMismatchException();
             var IsCash = moneySource == MoneySource.Cash;
             var IsCredit = moneySource == MoneySource.Credit;
             if (!IsCash && !IsCredit) throw new InvalidSourceException(moneySource.ToString());
@@ -142,7 +165,8 @@ namespace Service
                 Amount = amount,
                 Description = $"Withdraw of {amount.Amount} {amount.Currency} from wallet {fromWallet.id}",
                 Type = TransactionType.Expense,
-                CreatedAt = DateTimeOffset.UtcNow
+                CreatedAt = DateTimeOffset.UtcNow,
+                MoneySource = moneySource,
             };
             var transaction2 = new Transaction
             {
@@ -151,7 +175,8 @@ namespace Service
                 Amount = amount,
                 Description = $"Deposit of {amount.Amount} {amount.Currency} to wallet {toWallet.id}",
                 Type = TransactionType.Income,
-                CreatedAt = DateTimeOffset.UtcNow
+                CreatedAt = DateTimeOffset.UtcNow,
+                MoneySource = moneySource
             };
             await _unitOfWork.Repository<Transaction>().AddAsync(transaction);
             await _unitOfWork.Repository<Transaction>().AddAsync(transaction2);
