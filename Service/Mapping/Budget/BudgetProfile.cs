@@ -12,7 +12,7 @@ namespace Service.Mapping.Budget
     {
         public BudgetProfile()
         {
-            CreateMap<Domain.Entities.Budget, BudgetDTO>().ForMember(d=>d.Category,s=>s.MapFrom(b=>b.Category.Name));
+            CreateMap<Domain.Entities.Budget, BudgetDTO>().ForMember(d=>d.Category,s=>s.MapFrom(b=>b.Name));
             CreateMap<Domain.Entities.Budget, CreateBudgetDTO>().ReverseMap();
             CreateMap<Domain.Entities.Budget, UpdateBudgetDTO>().ReverseMap()
                      .ForAllMembers(opts => opts.Condition((src, DestinationMemberNamingConvention, srcMember) => srcMember != null)); 

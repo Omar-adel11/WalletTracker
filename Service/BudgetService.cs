@@ -8,6 +8,7 @@ using Domain.Contracts;
 using Domain.Entities;
 using Domain.Entities.Enum;
 using Domain.Entities.Struct;
+using Domain.Exceptions.BadRequestException;
 using Domain.Exceptions.NullReferenceException;
 using ServiceAbstraction;
 using ServiceAbstraction.DTOs.BudgetDTOs;
@@ -21,6 +22,8 @@ namespace Service
         public async Task<BudgetDTO> CreateBudgetAsync(CreateBudgetDTO createBudgetDTO)
         {
             var budget = _mapper.Map<Budget>(createBudgetDTO);
+            var IsExist = await _unitOfWork.Repository<Budget>().GetAsync(b => b.UserId == createBudgetDTO.UserId && b.CategoryId == createBudgetDTO.CategoryId);
+            if (IsExist.Any()) throw new CategoryExistException();
             budget.CreatedAt = DateTimeOffset.UtcNow;
             await _repo.AddAsync(budget);
             await _unitOfWork.CompleteAsync();
@@ -28,18 +31,20 @@ namespace Service
             return BudgetDTO;
         }
 
-        public async Task DeleteBudgetAsync(int budgetId)
+        public async Task DeleteBudgetAsync(int budgetId,int userId)
         {
-            var budget = await _repo.GetByIdAsync(budgetId);
+            var budget = await _repo.GetByIdAsync(budgetId,b=>b.Wallet);
             if(budget is null) throw new EntityNotFoundException("Budget");
+            if (budget.Wallet.UserId != userId) throw new EntityNotFoundException($"Budget with id :{budgetId} for this user");
             _repo.Delete(budget);
             await _unitOfWork.CompleteAsync();
         }
 
-        public async Task<BudgetDTO> GetBudgetAsync(int BudgetId)
+        public async Task<BudgetDTO> GetBudgetAsync(int BudgetId,int userId)
         {
             var budget = await _repo.GetByIdAsync(BudgetId, b => b.Category!, b => b.Wallet!);
             if (budget is null) throw new EntityNotFoundException("Budget");
+            if(budget.Wallet.UserId != userId) throw new EntityNotFoundException($"Budget with id :{BudgetId} for this user");
             var budgetDTO = _mapper.Map<BudgetDTO>(budget);
             return budgetDTO;
         }
@@ -53,11 +58,12 @@ namespace Service
             return budgetDTOs;
         }
 
-        public async Task<bool> SpendAsync(int budgetId, decimal amount, MoneySource source)
+        public async Task<bool> SpendAsync(int budgetId,int userId, decimal amount, MoneySource source)
         {
             // 1. Fetch budget with Wallet included (to update balance)
             var budget = await _repo.GetByIdAsync(budgetId, b => b.Wallet!);
             if (budget is null) throw new EntityNotFoundException("Budget");
+            if (budget.Wallet.UserId != userId) throw new EntityNotFoundException($"Budget with id :{budgetId} for this user");
 
             // 2. Check if the budget has enough "Room" left
             if ((budget.Limit.Amount - budget.Spent.Amount) < amount) return false;
@@ -94,11 +100,12 @@ namespace Service
             return await _unitOfWork.CompleteAsync() > 0;
         }
 
-        public async Task UpdateBudgetAsync(UpdateBudgetDTO updateBudgetDTO)
+        public async Task UpdateBudgetAsync(int userId, UpdateBudgetDTO updateBudgetDTO)
         {
             // 1. Fetch the existing tracked entity
-            var budget = await _repo.GetByIdAsync(updateBudgetDTO.Id);
+            var budget = await _repo.GetByIdAsync(updateBudgetDTO.Id,b=>b.Wallet);
             if (budget is null) throw new EntityNotFoundException("Budget");
+            if (budget.Wallet.UserId != userId) throw new EntityNotFoundException($"Budget with id :{updateBudgetDTO.Id} for this user");
 
             // 2. Map the DTO values ONTO the existing tracked entity
             _mapper.Map(updateBudgetDTO, budget);

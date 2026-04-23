@@ -11,5 +11,6 @@ namespace ServiceAbstraction.DTOs.BudgetDTOs
         public int Id { get; set; }
         public decimal? Amount { get; set; }
         public int? CategoryId { get; set; }
+        public string? Name { get; set; }
     }
 }

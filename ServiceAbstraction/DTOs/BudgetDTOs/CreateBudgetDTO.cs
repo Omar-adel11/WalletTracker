@@ -9,6 +9,7 @@ namespace ServiceAbstraction.DTOs.BudgetDTOs
     public class CreateBudgetDTO
     {
         public int UserId { get; set; }
+        public string Name { get; set; } = string.Empty;
         public decimal Amount { get; set; }
         public int CategoryId { get; set; }
         public int WalletId { get; set; }
