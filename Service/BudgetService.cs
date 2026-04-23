@@ -21,9 +21,11 @@ namespace Service
         private IGenericRepository<Budget> _repo = _unitOfWork.Repository<Budget>();    
         public async Task<BudgetDTO> CreateBudgetAsync(CreateBudgetDTO createBudgetDTO)
         {
-            var budget = _mapper.Map<Budget>(createBudgetDTO);
             var IsExist = await _unitOfWork.Repository<Budget>().GetAsync(b => b.UserId == createBudgetDTO.UserId && b.CategoryId == createBudgetDTO.CategoryId);
             if (IsExist.Any()) throw new CategoryExistException();
+            var wallet = await _unitOfWork.Repository<Wallet>().GetByIdAsync(createBudgetDTO.WalletId);
+            createBudgetDTO.Currency = wallet.Currency;
+            var budget = _mapper.Map<Budget>(createBudgetDTO);
             budget.CreatedAt = DateTimeOffset.UtcNow;
             await _repo.AddAsync(budget);
             await _unitOfWork.CompleteAsync();

@@ -14,9 +14,10 @@ namespace ServiceAbstraction.DTOs.TransactionDtos
         public string? Description { get; set; }
         public DateTimeOffset Date { get; set; } = DateTimeOffset.UtcNow;
         public MoneySource MoneySource { get; set; } = MoneySource.Cash;
-        public string source { get; set; } = "Cash";
+        public string source { get; set; } = "Cash";    
         public int WalletId { get; set; }
         public int CategoryId { get; set; }
+        public int UserId { get; set; }
         public TransactionType Type { get; set; }
     }
 }

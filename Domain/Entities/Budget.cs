@@ -12,7 +12,7 @@ namespace Domain.Entities
         public string Name { get; set; } = null!;
         public Money Limit { get; set; }
         public Money Spent { get; set; }
-        public bool IsDisabled { get; set; }
+        public bool IsDisabled { get; set; } = false;
 
         //Navigation properties
         public int UserId { get; set; }

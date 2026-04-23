@@ -11,13 +11,14 @@ namespace Persistence.Interceptors
 {
     public class SoftDeleteInterceptor : SaveChangesInterceptor
     {
-        public override ValueTask<int> SavedChangesAsync(SaveChangesCompletedEventData eventData, int result, CancellationToken cancellationToken = default)
+
+        public override ValueTask<InterceptionResult<int>> SavingChangesAsync(DbContextEventData eventData, InterceptionResult<int> result, CancellationToken cancellationToken = default)
         {
-            if(eventData.Context == null) return base.SavedChangesAsync(eventData, result, cancellationToken);
+            if (eventData.Context == null) return base.SavingChangesAsync(eventData, result, cancellationToken);
 
             foreach (var entry in eventData.Context.ChangeTracker.Entries<ISoftDeletable>())
             {
-           
+
                 if (entry.State == EntityState.Deleted)
                 {
                     entry.State = EntityState.Modified;
@@ -25,8 +26,8 @@ namespace Persistence.Interceptors
                 }
             }
 
-            return base.SavedChangesAsync(eventData, result, cancellationToken);
+            return base.SavingChangesAsync(eventData, result, cancellationToken);
         }
-        
+     
     }
 }
