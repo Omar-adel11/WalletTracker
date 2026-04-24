@@ -8,6 +8,7 @@ using Domain.Contracts;
 using Domain.Entities;
 using Domain.Entities.Enum;
 using Domain.Entities.Struct;
+using Domain.Exceptions.AuthExceptions;
 using Domain.Exceptions.MoneyInvalidOperationException;
 using Domain.Exceptions.NullReferenceException;
 using ServiceAbstraction;
@@ -28,18 +29,29 @@ namespace Service
             var installmentsDTO = _mapper.Map<IEnumerable<InstallmentDTO>>(installments);
             return installmentsDTO;
         }
-
-        public async Task<InstallmentDTO> GetInstallmentsByIdAsync(int id)
+        
+        public async Task<InstallmentDTO> GetInstallmentsByIdAsync(int id,int userId)
         {
-            var installment = await _repo.GetByIdAsync(id, i => i.Category);
+            var installment = await _repo.GetByIdAsync(id, i => i.Category!);
             if (installment == null)
                 throw new  EntityNotFoundException("installment");
+            if(installment.UserId != userId) throw new UnAuthorizedException("You are not authorized");
             var installmentDTO = _mapper.Map<InstallmentDTO>(installment);
             return installmentDTO;
         }
-        public async Task<InstallmentDTO> CreateInstallmentAsync(CreateInstallmentDTO createInstallmentDTO)
+        public async Task<InstallmentDTO> CreateInstallmentAsync(int userId,CreateInstallmentDTO createInstallmentDTO)
         {
-            var installment = _mapper.Map<Installments>(createInstallmentDTO);
+            createInstallmentDTO.UserId = userId;
+            var wallet = await _unitOfWork.Repository<Wallet>().GetByIdAsync(createInstallmentDTO.WalletId);
+            if (wallet == null || wallet.UserId != userId) throw new UnAuthorizedException("you are not authorized");
+
+            var category = await _unitOfWork.Repository<Category>().GetByIdAsync(createInstallmentDTO.CategoryId);
+            if (category is null) throw new EntityNotFoundException("cateogory");
+
+            var installment = _mapper.Map<Domain.Entities.Installments>(createInstallmentDTO);
+            installment.Category = category;
+            installment.Amount = new Money { Amount = createInstallmentDTO.Amount, Currency = wallet.Currency };
+            installment.UserId = userId;
             installment.CreatedAt = DateTimeOffset.UtcNow;
             await _repo.AddAsync(installment);
             await _unitOfWork.CompleteAsync();
@@ -47,26 +59,39 @@ namespace Service
             return installmentDTO;
         }
 
-        public async Task DeleteInstallmentAsync(int installmentId)
+        public async Task DeleteInstallmentAsync(int installmentId, int userId)
         {
             var installment =await _repo.GetByIdAsync(installmentId);
             if (installment is null) throw new EntityNotFoundException("installment");
+            if(installment.UserId != userId) throw new UnAuthorizedException($"You are not authorized to delete that installment");
             _repo.Delete(installment);
             await _unitOfWork.CompleteAsync();
         }
 
-        public async Task UpdateInstallmentAsync(UpdateInstallmentDTO updateInstallmentDTO)
+        public async Task UpdateInstallmentAsync(int userId, int id,UpdateInstallmentDTO updateInstallmentDTO)
         {
+            updateInstallmentDTO.Id = id;
             var installment = await _repo.GetByIdAsync(updateInstallmentDTO.Id,i => i.Category!);
             if (installment is null) throw new EntityNotFoundException("installment");
-            _mapper.Map(updateInstallmentDTO, installment);
+            if (installment.UserId != userId) throw new UnAuthorizedException("you are not authorized to update this installment");
+
+            installment.Description = updateInstallmentDTO.Description ?? installment.Description;
+            decimal finalAmount = updateInstallmentDTO.Amount ?? installment.Amount.Amount;
+            installment.Amount = installment.Amount with { Amount = finalAmount };
+
+            installment.CategoryId = updateInstallmentDTO.CategoryId ?? installment.CategoryId;
+            installment.StartDate = updateInstallmentDTO.StartDate ?? installment.StartDate;
+            installment.EndDate = updateInstallmentDTO.EndDate ?? installment.EndDate;
+            installment.NoOfPaidInstallments = updateInstallmentDTO.NoOfPaidInstallments ?? installment.NoOfPaidInstallments;
+
+            
             installment.UpdatedAt = DateTimeOffset.UtcNow;
             _repo.Update(installment);
             await _unitOfWork.CompleteAsync();
 
         }
 
-        public async Task<bool> payInstallmentAsync(int installmentId, int wallet_id,MoneySource source)
+        public async Task<bool> payInstallmentAsync(int installmentId, PayInstallmentDTO dto)
         {
             var installment = await _repo.GetByIdAsync(installmentId,i=>i.Category!);
             if (installment is null) throw new EntityNotFoundException("installment");
@@ -78,22 +103,22 @@ namespace Service
                 throw new EntityNotFoundException("installment");
             }
 
-            var wallet = await _unitOfWork.Repository<Wallet>().GetByIdAsync(wallet_id);
+            var wallet = await _unitOfWork.Repository<Wallet>().GetByIdAsync(dto.WalletId);
             if (wallet is null) throw new EntityNotFoundException("wallet");
 
             if(installment.Amount.Currency != wallet.Currency) throw new CurrencyMismatchException();
 
-            if (source == MoneySource.Cash)
+            if (dto.source == MoneySource.Cash)
             {
                 if (installment.Amount.Amount > wallet.Cash) throw new NotEnoughBalanceException();
                 wallet.Cash -= installment.Amount.Amount;
             }
-            else if (source == MoneySource.Credit)
+            else if (dto.source == MoneySource.Credit)
             {
                 if (installment.Amount.Amount > wallet.Credit) throw new NotEnoughBalanceException();
                 wallet.Credit -= installment.Amount.Amount;
             }
-            else throw new InvalidSourceException(source.ToString());
+            else throw new InvalidSourceException(dto.source.ToString());
 
             installment.NoOfPaidInstallments++;
             if (installment.NoOfPaidInstallments == totalInstallments) installment.IsDone = true;
@@ -105,7 +130,7 @@ namespace Service
                 Type = TransactionType.Expense,
                 Description = "Pay installment",
                 Date = DateTimeOffset.UtcNow,
-                MoneySource = source,
+                MoneySource = dto.source,
                 UserId = wallet.UserId,
                 CategoryId = installment.CategoryId,
                 InstallmentsId = installment.id,

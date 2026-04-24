@@ -137,7 +137,7 @@ namespace Service
 
             var userList = await _unitOfWork.Repository<User>().GetAsync(u => u.UserName == ToUserName);
             var user = userList.FirstOrDefault();
-
+            if (user is null) throw new EntityNotFoundException("User");
             var toWallet = await _repo.GetByIdAsync(toWalletId, w => w.Transactions!);
             if (toWallet is null) throw new EntityNotFoundException("Wallet to receieve");
             if (user.Id != toWallet.id) throw new EntityNotFoundException($"Wallet with id {toWalletId} for that {ToUserName}");
@@ -145,43 +145,54 @@ namespace Service
             if (fromWallet.Currency != toWallet.Currency) throw new CurrencyMismatchException();
             var IsCash = moneySource == MoneySource.Cash;
             var IsCredit = moneySource == MoneySource.Credit;
-            if (!IsCash && !IsCredit) throw new InvalidSourceException(moneySource.ToString());
-            if (IsCash)
-            {
-                if(fromWallet.Cash < amount.Amount) throw new NotEnoughBalanceException();
-                fromWallet.Cash -= amount.Amount;
-                toWallet.Cash += amount.Amount;
-            }
-            else
-            {
-                if (fromWallet.Credit < amount.Amount) throw new NotEnoughBalanceException();
-                fromWallet.Credit -= amount.Amount;
-                toWallet.Credit += amount.Amount;
-            }
-            var transaction = new Transaction
-            {
-                WalletId = fromWallet.id,
-                UserId = fromWallet.UserId,
-                Amount = amount,
-                Description = $"Withdraw of {amount.Amount} {amount.Currency} from wallet {fromWallet.id}",
-                Type = TransactionType.Expense,
-                CreatedAt = DateTimeOffset.UtcNow,
-                MoneySource = moneySource,
-            };
-            var transaction2 = new Transaction
-            {
-                WalletId = toWallet.id,
-                UserId = toWallet.UserId,
-                Amount = amount,
-                Description = $"Deposit of {amount.Amount} {amount.Currency} to wallet {toWallet.id}",
-                Type = TransactionType.Income,
-                CreatedAt = DateTimeOffset.UtcNow,
-                MoneySource = moneySource
-            };
-            await _unitOfWork.Repository<Transaction>().AddAsync(transaction);
-            await _unitOfWork.Repository<Transaction>().AddAsync(transaction2);
 
-            await _unitOfWork.CompleteAsync();
+            using var trans = await _unitOfWork.BeginTransactionAsync();
+            try
+            {
+                if (!IsCash && !IsCredit) throw new InvalidSourceException(moneySource.ToString());
+                if (IsCash)
+                {
+                    if (fromWallet.Cash < amount.Amount) throw new NotEnoughBalanceException();
+                    fromWallet.Cash -= amount.Amount;
+                    toWallet.Cash += amount.Amount;
+                }
+                else
+                {
+                    if (fromWallet.Credit < amount.Amount) throw new NotEnoughBalanceException();
+                    fromWallet.Credit -= amount.Amount;
+                    toWallet.Credit += amount.Amount;
+                }
+                var transaction = new Transaction
+                {
+                    WalletId = fromWallet.id,
+                    UserId = fromWallet.UserId,
+                    Amount = amount,
+                    Description = $"Withdraw of {amount.Amount} {amount.Currency} from wallet {fromWallet.id}",
+                    Type = TransactionType.Expense,
+                    CreatedAt = DateTimeOffset.UtcNow,
+                    MoneySource = moneySource,
+                };
+                var transaction2 = new Transaction
+                {
+                    WalletId = toWallet.id,
+                    UserId = toWallet.UserId,
+                    Amount = amount,
+                    Description = $"Deposit of {amount.Amount} {amount.Currency} to wallet {toWallet.id}",
+                    Type = TransactionType.Income,
+                    CreatedAt = DateTimeOffset.UtcNow,
+                    MoneySource = moneySource
+                };
+                await _unitOfWork.Repository<Transaction>().AddAsync(transaction);
+                await _unitOfWork.Repository<Transaction>().AddAsync(transaction2);
+                await _unitOfWork.CompleteAsync();
+                await trans.CommitAsync();
+            }catch(Exception ex)
+            {
+                await trans.RollbackAsync();
+                throw;
+            }
+
+            
 
         }
 

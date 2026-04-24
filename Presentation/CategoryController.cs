@@ -15,15 +15,14 @@ namespace Presentation
     [ApiController]
     [Route("api/[controller]")]
     [Authorize]
-    public class CategoryController(IServiceManager _serviceManager,UserManager<User> _userManager) : ControllerBase
+    public class CategoryController(IServiceManager _serviceManager) : ControllerBase
     {
-
+        private int userId => int.Parse(User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value)!;
         [HttpGet]
         
         public async Task<IActionResult> GetAllCategories()
         {
-            var userId = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value;
-            var categories = await _serviceManager.CategoryService.GetAllCategoriesAsync(int.Parse(userId));
+            var categories = await _serviceManager.CategoryService.GetAllCategoriesAsync(userId);
             return Ok(categories);
             
         }
@@ -40,7 +39,6 @@ namespace Presentation
         [HttpPost]
         public async Task<IActionResult> CreateCategory([FromBody] string name)
         {
-            var userId = int.Parse(User.Claims.FirstOrDefault(c=>c.Type ==  ClaimTypes.NameIdentifier)?.Value);
             var result = await _serviceManager.CategoryService.CreateCategoryAsync(name,userId);
             return Ok(result);
         }
