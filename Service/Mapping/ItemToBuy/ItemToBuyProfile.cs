@@ -15,7 +15,7 @@ namespace Service.Mapping.ItemToBuy
             CreateMap<Domain.Entities.ItemToBuy, ItemToBuyDTO>();
                 
              CreateMap<Domain.Entities.ItemToBuy, CreateItemToBuyDTO>().ReverseMap();
-             CreateMap<Domain.Entities.ItemToBuy, UpdateItemToBuyDTO>().ReverseMap();
+             CreateMap<Domain.Entities.ItemToBuy, UpdateItemToBuyDTO>();
         }
     }
 }

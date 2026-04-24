@@ -31,6 +31,8 @@ namespace Persistence.Data.Configurations
 
             builder.HasQueryFilter(b => !b.IsDisabled);
 
+            builder.HasIndex(b => new { b.UserId, b.CategoryId }).IsUnique();
+
             builder.ComplexProperty(t => t.Limit, m => m.ConfigureMoney("Limit"));
             builder.ComplexProperty(t => t.Spent, m => m.ConfigureMoney("Spent"));
 

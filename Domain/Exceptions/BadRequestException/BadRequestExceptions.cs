@@ -24,4 +24,7 @@ namespace Domain.Exceptions.BadRequestException
     public sealed class UserNameExistException() : BadRequestException("UserName is already Exist")
     {
     }
+    public sealed class CategoryExistException() : BadRequestException("Category is already Exist")
+    {
+    }
 }

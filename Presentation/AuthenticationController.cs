@@ -26,6 +26,7 @@ namespace Presentation
         [HttpPost("signup")]
         public async Task<IActionResult> SignUp([FromForm] UserSignUpDTO signUpDTO)
         {
+            Console.WriteLine("Controller Hit");
             var result = await _serviceManger.AuthenticationService.SignUpAsync(signUpDTO);
             return Ok(result);
         }

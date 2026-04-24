@@ -11,10 +11,10 @@ namespace ServiceAbstraction
     public interface IInstallmentsService
     {
         Task<IEnumerable<InstallmentDTO>> GetAllInstallmentsAsync(int userId);
-        Task<InstallmentDTO> GetInstallmentsByIdAsync(int id);
-        Task<InstallmentDTO> CreateInstallmentAsync(CreateInstallmentDTO createInstallmentDTO);
-        Task DeleteInstallmentAsync(int installmentId);
-        Task UpdateInstallmentAsync(UpdateInstallmentDTO updateInstallmentDTO);
-        Task<bool> payInstallmentAsync(int installmentId, int wallet_id, MoneySource source);
+        Task<InstallmentDTO> GetInstallmentsByIdAsync(int id,int userId);
+        Task<InstallmentDTO> CreateInstallmentAsync(int userId, CreateInstallmentDTO createInstallmentDTO);
+        Task DeleteInstallmentAsync(int installmentId, int userId);
+        Task UpdateInstallmentAsync(int userId,int id,UpdateInstallmentDTO updateInstallmentDTO);
+        Task<bool> payInstallmentAsync(int installmentId, PayInstallmentDTO dto);
     }
 }

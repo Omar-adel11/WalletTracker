@@ -3,16 +3,16 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using Domain.Entities.Struct;
+using Domain.Entities.Enum;
 
 namespace ServiceAbstraction.DTOs.ItemToBuyDTOs
 {
-    public class UpdateItemToBuyDTO
+    public class SaveMoneyDTO
     {
         public int Id { get; set; }
-        public int? CategoryId { get; set; }
-        public string? Name { get; set; } 
-        public decimal? Price { get; set; }
-        
+        public int walletId {  get; set; }  
+        public int amount { get; set; }
+        public MoneySource source {  get; set; }
+
     }
 }

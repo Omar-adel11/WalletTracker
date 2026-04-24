@@ -10,10 +10,10 @@ namespace ServiceAbstraction
 {
     public interface ITransactionService
     {
-        Task<IEnumerable<TransactionDTO>> GetTransactionByWalletAsync(int walletId, int pageNumber, int pageSize);
-        Task<TransactionDTO> GetTransactionByIdAsync(int Id);
-        Task<TransactionDTO> CreateTransactionAsync(CreateTransactionDTO transactionDTO);
-        Task DeleteTransactionAsync(int transactionId);
-        Task UpdateTransactionAsync(UpdateTransactionDTO updateTransactionDTO);
+        Task<IEnumerable<TransactionDTO>> GetTransactionByWalletAsync(int userId,int walletId,int PageNumber,int PageSize);
+        Task<TransactionDTO> GetTransactionByIdAsync(int userId,int Id);
+        Task<TransactionDTO> CreateTransactionAsync(int userId, CreateTransactionDTO transactionDTO);
+        Task DeleteTransactionAsync(int userId, int transactionId);
+        Task UpdateTransactionAsync(int userId, UpdateTransactionDTO updateTransactionDTO);
     }
 }

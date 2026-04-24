@@ -49,7 +49,7 @@ namespace Persistence.Repository
                     result = result.Include(include);
                 }
             }
-            return await result.FirstOrDefaultAsync(e => EF.Property<int>(e, "Id") == id);
+            return await result.FirstOrDefaultAsync(e => EF.Property<int>(e, "id") == id);
         }
 
         public async Task AddAsync(T entity)
@@ -67,8 +67,8 @@ namespace Persistence.Repository
             _context.Set<T>().Update(entity);
         }
 
-
-        public async Task<IReadOnlyList<T>> GetAsyncFilteredWithPaginate(Expression<Func<T, bool>> Predicate, int? pageNumber = 1, int? pageSize = 10, params Expression<Func<T, object>>[] includes)
+       
+        public async Task<IReadOnlyList<T>> GetAsyncFilteredWithPaginate(Expression<Func<T, bool>> Predicate, Expression<Func<T, object>> orderBy, int? pageNumber = 1, int? pageSize = 10, params Expression<Func<T, object>>[] includes)
         {
             IQueryable<T> query = _context.Set<T>();
 
@@ -77,7 +77,7 @@ namespace Persistence.Repository
             {
                 query = includes.Aggregate(query, (current, include) => current.Include(include));
             }
-
+            
             // 2. Apply Filtering
             query = query.Where(Predicate);
 
@@ -89,7 +89,7 @@ namespace Persistence.Repository
 
             // IMPORTANT: Always OrderBy before Paging in SQL Server
             // You might want to order by CreatedAt or Id
-            query = query.OrderByDescending(e => EF.Property<DateTimeOffset>(e, "CreatedAt"))
+            query = query.OrderByDescending(orderBy)
                          .Skip((page - 1) * size)
                          .Take(size);
 
