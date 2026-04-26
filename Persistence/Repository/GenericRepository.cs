@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 using Domain.Contracts;
 using Microsoft.EntityFrameworkCore;
 using Persistence.Data.Contexts;
-using Persistence.Repository.Extensions;
+using Shared;
 
 namespace Persistence.Repository
 {
@@ -15,7 +15,7 @@ namespace Persistence.Repository
     {
         public async Task<IReadOnlyList<T>> GetAllAsync(params Expression<Func<T, object>>[] includes)
         {
-            IQueryable<T> result = _context.Set<T>();
+            IQueryable<T> result = _context.Set<T>().AsNoTracking();
             if (includes != null)
             {
                 foreach (var include in includes)
@@ -28,7 +28,7 @@ namespace Persistence.Repository
 
         public async Task<IReadOnlyList<T>> GetAsync(Expression<Func<T, bool>> Predicate, params Expression<Func<T, object>>[] includes)
         {
-            IQueryable<T> result = _context.Set<T>();
+            IQueryable<T> result = _context.Set<T>().AsNoTracking();
             if(includes != null)
             {
                 foreach (var include in includes)
@@ -68,32 +68,35 @@ namespace Persistence.Repository
         }
 
        
-        public async Task<IReadOnlyList<T>> GetAsyncFilteredWithPaginate(Expression<Func<T, bool>> Predicate, Expression<Func<T, object>> orderBy, int? pageNumber = 1, int? pageSize = 10, params Expression<Func<T, object>>[] includes)
+        public async Task<PagedResult<T>> GetAsyncFilteredWithPaginate(Expression<Func<T, bool>> Predicate, Expression<Func<T, object>> orderBy, int? pageNumber = 1, int? pageSize = 10, params Expression<Func<T, object>>[] includes)
         {
             IQueryable<T> query = _context.Set<T>();
 
-            // 1. Apply Eager Loading (Includes)
             if (includes.Any())
             {
                 query = includes.Aggregate(query, (current, include) => current.Include(include));
             }
             
-            // 2. Apply Filtering
             query = query.Where(Predicate);
 
-            // 3. Apply Pagination (Ensuring defaults if null)
             int page = pageNumber ?? 1;
             int size = pageSize ?? 10;
 
             if (page < 1) page = 1;
-
-            // IMPORTANT: Always OrderBy before Paging in SQL Server
-            // You might want to order by CreatedAt or Id
+            int count = await query.CountAsync();
+            
             query = query.OrderByDescending(orderBy)
                          .Skip((page - 1) * size)
                          .Take(size);
 
-            return await query.ToListAsync();
+            return new PagedResult<T>(query.ToList(),page,size,count);
         }
+
+        public async Task<int> CountAsync(Expression<Func<T, bool>> predicate) => await _context.Set<T>().CountAsync(predicate);
+        
+
+        public async Task<bool> ExistsAsync(Expression<Func<T, bool>> predicate) => await _context.Set<T>().AnyAsync(predicate);
+
+       
     }
 }

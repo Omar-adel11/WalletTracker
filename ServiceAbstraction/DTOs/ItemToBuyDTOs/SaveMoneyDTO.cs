@@ -11,7 +11,7 @@ namespace ServiceAbstraction.DTOs.ItemToBuyDTOs
     {
         public int Id { get; set; }
         public int walletId {  get; set; }  
-        public int amount { get; set; }
+        public decimal amount { get; set; }
         public MoneySource source {  get; set; }
 
     }

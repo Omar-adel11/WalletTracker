@@ -5,6 +5,7 @@ using System.Security.Claims;
 using System.Text;
 using System.Threading.Tasks;
 using Domain.Entities;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using ServiceAbstraction;
 using ServiceAbstraction.DTOs.BudgetDTOs;
@@ -14,6 +15,7 @@ namespace Presentation
 {
     [ApiController]
     [Route("api/[controller]")]
+    [Authorize]
     public class InstallmentController(IServiceManager _serviceManager) : ControllerBase
     {
         private int userId => int.Parse(User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value);
