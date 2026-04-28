@@ -13,7 +13,7 @@ namespace Service.Mapping.Budget
     {
         public BudgetProfile()
         {
-            CreateMap<Domain.Entities.Budget, BudgetDTO>().ForMember(d=>d.Category,s=>s.MapFrom(b=>b.Name));
+            CreateMap<Domain.Entities.Budget, BudgetDTO>().ForMember(d => d.Category, s => s.MapFrom(b => b.Category != null ? b.Category.Name : null));
             CreateMap<CreateBudgetDTO, Domain.Entities.Budget>()
         .ForMember(dest => dest.Limit, opt => opt.MapFrom(src => new Money
         {

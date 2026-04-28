@@ -18,6 +18,7 @@ namespace Service
         public async Task<ICollection<CategoryDto>> GetAllCategoriesAsync(int? UserId = null)
         {
             var categories = await _repo.GetAsync(c => c.UserId == null || c.UserId == UserId);
+            if (!categories.Any()) throw new EntityNotFoundException("category");
             var categoryDtos = _mapper.Map<ICollection<CategoryDto>>(categories);
             return categoryDtos;
         }

@@ -18,11 +18,35 @@ namespace Service
     public class BudgetService(IUnitOfWork _unitOfWork,
         IMapper _mapper) : IBudgetService
     {
-        private IGenericRepository<Budget> _repo = _unitOfWork.Repository<Budget>();    
+        private IGenericRepository<Budget> _repo = _unitOfWork.Repository<Budget>();
+        public async Task<BudgetDTO> GetBudgetAsync(int BudgetId, int userId)
+        {
+            Budget? budget = await GetAndAuthorizeBudget(BudgetId, userId);
+            var budgetDTO = _mapper.Map<BudgetDTO>(budget);
+            return budgetDTO;
+        }
+
+        private async Task<Budget?> GetAndAuthorizeBudget(int BudgetId, int userId)
+        {
+            var budget = await _repo.GetByIdAsync(BudgetId, b => b.Category!, b => b.Wallet!);
+            if (budget is null) throw new EntityNotFoundException("Budget");
+            if (budget.Wallet.UserId != userId) throw new EntityNotFoundException($"Budget with id :{BudgetId} for this user");
+            return budget;
+        }
+
+        public async Task<IEnumerable<BudgetDTO>> GetBudgetsByUserIdAsync(int userId)
+        {
+            var budgets = await _repo.GetAsync(b => b.UserId == userId,
+                                               b => b.Category!, b => b.Wallet!);
+            if (!budgets.Any()) throw new EntityNotFoundException("Budget");
+            var budgetDTOs = _mapper.Map<IEnumerable<BudgetDTO>>(budgets);
+            return budgetDTOs;
+        }
+
         public async Task<BudgetDTO> CreateBudgetAsync(CreateBudgetDTO createBudgetDTO)
         {
-            var IsExist = await _unitOfWork.Repository<Budget>().GetAsync(b => b.UserId == createBudgetDTO.UserId && b.CategoryId == createBudgetDTO.CategoryId);
-            if (IsExist.Any()) throw new CategoryExistException();
+            var IsExist = await _unitOfWork.Repository<Budget>().ExistsAsync(b => b.UserId == createBudgetDTO.UserId && b.CategoryId == createBudgetDTO.CategoryId);
+            if (!IsExist) throw new CategoryExistException();
             var wallet = await _unitOfWork.Repository<Wallet>().GetByIdAsync(createBudgetDTO.WalletId);
             createBudgetDTO.Currency = wallet.Currency;
             var budget = _mapper.Map<Budget>(createBudgetDTO);
@@ -42,23 +66,7 @@ namespace Service
             await _unitOfWork.CompleteAsync();
         }
 
-        public async Task<BudgetDTO> GetBudgetAsync(int BudgetId,int userId)
-        {
-            var budget = await _repo.GetByIdAsync(BudgetId, b => b.Category!, b => b.Wallet!);
-            if (budget is null) throw new EntityNotFoundException("Budget");
-            if(budget.Wallet.UserId != userId) throw new EntityNotFoundException($"Budget with id :{BudgetId} for this user");
-            var budgetDTO = _mapper.Map<BudgetDTO>(budget);
-            return budgetDTO;
-        }
-
-        public async Task<IEnumerable<BudgetDTO>> GetBudgetsByUserIdAsync(int userId)
-        {
-            var budgets = await _repo.GetAsync(b => b.UserId == userId,
-                                               b=>b.Category!,b => b.Wallet!);
-            if (!budgets.Any()) throw new EntityNotFoundException("Budget");
-            var budgetDTOs = _mapper.Map<IEnumerable<BudgetDTO>>(budgets);
-            return budgetDTOs;
-        }
+        
 
         public async Task<bool> SpendAsync(int budgetId,int userId, decimal amount, MoneySource source)
         {

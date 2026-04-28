@@ -5,6 +5,8 @@ using System.Text;
 using System.Threading.Tasks;
 using Domain.Entities.Enum;
 using Domain.Entities.Struct;
+using Domain.Exceptions.MoneyInvalidOperationException;
+using Microsoft.EntityFrameworkCore.Infrastructure;
 
 namespace Domain.Entities
 {
@@ -18,37 +20,66 @@ namespace Domain.Entities
 
 
         public int UserId { get; set; }
-        public User user { get; set; } 
+        public User user { get; set; }
 
-        public void Deposit(decimal amount, BalanceSource source)
+       
+        public void ApplyTransaction(TransactionType type, MoneySource source, decimal amount,int? categoryId = null,string? description = null,bool isUpdated = false)
         {
-            if (source == BalanceSource.Cash) Cash += amount;
-            else if (source == BalanceSource.Credit) Credit += amount;
-
-            UpdatedAt = DateTimeOffset.UtcNow;
+            if (type == TransactionType.Income)
+            {
+                if (source == MoneySource.Cash) Cash += amount;
+                else if(source == MoneySource.Credit) Credit += amount;
+                else Pended += amount;
+            }
+            else 
+            {
+                if (source == MoneySource.Cash)
+                {
+                    if (Cash < amount) throw new NotEnoughBalanceException();
+                    Cash -= amount;
+                }
+                else if(source == MoneySource.Credit)
+                {
+                    if (Credit < amount) throw new NotEnoughBalanceException();
+                    Credit -= amount;
+                }
+                else
+                {
+                    if(Pended < amount) throw new NotEnoughBalanceException();
+                    Pended -= amount;
+                }
+            }
+            if (!isUpdated)
+            {
+                var transaction = new Transaction
+                {
+                    WalletId = this.id,
+                    UserId = UserId,
+                    Amount = new Money { Amount = amount, Currency = this.Currency },
+                    Description = description ?? $"{type} of {amount} {this.Currency} from wallet {this.id}",
+                    Type = type,
+                    CreatedAt = DateTimeOffset.UtcNow,
+                    MoneySource = source,
+                    Date = DateTimeOffset.UtcNow,
+                    CategoryId = categoryId
+                };
+                this.Transactions.Add(transaction);
+            }
         }
 
-        public void Withdraw(decimal amount, BalanceSource source)
+        public void UndoTransaction(TransactionType type, MoneySource source, decimal amount)
         {
-            
-            if (source == BalanceSource.Cash && Cash < amount)
-                throw new InvalidOperationException("Insufficient Cash funds");
 
-            if (source == BalanceSource.Cash) Cash -= amount;
-            else if (source == BalanceSource.Credit) Credit -= amount;
-
-            UpdatedAt = DateTimeOffset.UtcNow;
-        }
-
-        public void PendMoney(decimal amount,BalanceSource source)
-        {
-            if (Cash < amount) throw new InvalidOperationException("Not enough cash to pend");
-            if (source == BalanceSource.Cash)
-                Cash = Cash - amount;
-            else if (source == BalanceSource.Credit)
-                Credit = Credit-amount;
-            Pended =Pended+ amount;
-            UpdatedAt = DateTimeOffset.UtcNow;
+            if (type == TransactionType.Income)
+            {
+                if (source == MoneySource.Cash) Cash -= amount;
+                else Credit -= amount;
+            }
+            else
+            {
+                if (source == MoneySource.Cash) Cash += amount;
+                else Credit += amount;
+            }
         }
 
         //Navegation properties

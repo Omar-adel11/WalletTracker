@@ -9,6 +9,7 @@ namespace Domain.Entities.Enum
     public enum MoneySource
     {
         Cash = 0,
-        Credit
+        Credit,
+        Pended
     }
 }
