@@ -6,6 +6,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using ServiceAbstraction;
 
 namespace Presentation
@@ -13,6 +14,7 @@ namespace Presentation
     [ApiController]
     [Route("api/[controller]")]
     [Authorize]
+    [EnableRateLimiting("AnalyticsPolicy")]
     public class AnalyticsController(IServiceManager _serviceManager) : ControllerBase
     {
         int userId => int.Parse(User.Claims.FirstOrDefault(c=>c.Type == ClaimTypes.NameIdentifier)!.Value);

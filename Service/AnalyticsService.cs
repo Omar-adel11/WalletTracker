@@ -17,7 +17,7 @@ namespace Service
         {
             var fromDate = from ?? DateTimeOffset.UtcNow.AddMonths(-1);
             var toDate = to ?? DateTimeOffset.UtcNow;
-
+         
             var transaction = await _unitOfWork.Repository<Domain.Entities.Transaction>()
                                                 .GetAsync(t => t.UserId == userId
                                                           && t.WalletId == WalletId
@@ -67,7 +67,7 @@ namespace Service
                     TotalIncome = income,
                     TotalExpenses = expense,
                     NetSavings = netSavings,
-                    SavingsRate = netSavings > 0
+                    SavingsRate = income > 0
                     ? Math.Round(netSavings / income * 100, 2)
                     : 0,
                     Currency = wallet?.Currency ?? "EGP"

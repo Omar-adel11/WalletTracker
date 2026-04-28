@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using Domain.Entities;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using ServiceAbstraction;
 using ServiceAbstraction.DTOs.BudgetDTOs;
 using ServiceAbstraction.DTOs.InstallmentsDTOs;
