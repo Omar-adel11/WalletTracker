@@ -4,15 +4,16 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using ServiceAbstraction.DTOs.CategoryDtos;
+using Shared;
 
 namespace ServiceAbstraction
 {
     public interface ICategoryService
     {
-        Task<ICollection<CategoryDto>> GetAllCategoriesAsync(int? UserId = null);
-        Task<CategoryDto> GetCategoryByIdAsync(int id);
+        Task<PagedResult<CategoryDto>> GetAllCategoriesAsync(int? UserId = null, int? PageNumber = 1, int? PageSize = 5);
+        Task<CategoryDto> GetCategoryByIdAsync(int userId,int id);
         Task<CategoryDto> CreateCategoryAsync(string name, int? UserId = null);
-        Task DeleteCategoryAsync(int CategoryId);
-        Task UpdateCategoryAsync(int CategoryId, string newName);
+        Task DeleteCategoryAsync(int userId,int CategoryId);
+        Task UpdateCategoryAsync(int userId, int CategoryId, string newName);
     }
 }

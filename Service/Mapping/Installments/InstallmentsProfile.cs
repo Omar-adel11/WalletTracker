@@ -7,6 +7,7 @@ using AutoMapper;
 using Domain.Entities;
 using Domain.Entities.Struct;
 using ServiceAbstraction.DTOs.InstallmentsDTOs;
+using Shared;
 
 namespace Service.Mapping.Installments
 {
@@ -15,6 +16,7 @@ namespace Service.Mapping.Installments
         public InstallmentsProfile()
         {
             CreateMap<Domain.Entities.Installments, InstallmentDTO>().ForMember(d=>d.Category,s=>s.MapFrom(i=>i.Category.Name));
+            CreateMap<PagedResult<Domain.Entities.Installments>, PagedResult<InstallmentDTO>>();
             CreateMap<CreateInstallmentDTO, Domain.Entities.Installments>()
                 .ForMember(dest => dest.Amount, opt => opt.MapFrom(src => new Money
                 {

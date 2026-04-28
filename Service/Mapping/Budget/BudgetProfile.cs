@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using AutoMapper;
 using Domain.Entities.Struct;
 using ServiceAbstraction.DTOs.BudgetDTOs;
+using Shared;
 
 namespace Service.Mapping.Budget
 {
@@ -14,6 +15,7 @@ namespace Service.Mapping.Budget
         public BudgetProfile()
         {
             CreateMap<Domain.Entities.Budget, BudgetDTO>().ForMember(d => d.Category, s => s.MapFrom(b => b.Category != null ? b.Category.Name : null));
+            CreateMap<PagedResult<Domain.Entities.Budget>, PagedResult<BudgetDTO>>();
             CreateMap<CreateBudgetDTO, Domain.Entities.Budget>()
         .ForMember(dest => dest.Limit, opt => opt.MapFrom(src => new Money
         {

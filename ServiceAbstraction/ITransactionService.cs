@@ -11,7 +11,7 @@ namespace ServiceAbstraction
 {
     public interface ITransactionService
     {
-        Task<PagedResult<TransactionDTO>> GetTransactionByWalletAsync(int userId,int walletId,int PageNumber,int PageSize);
+        Task<PagedResult<TransactionDTO>> GetTransactionByWalletAsync(int userId,int walletId, int? PageNumber = 1, int? PageSize = 5);
         Task<TransactionDTO> GetTransactionByIdAsync(int userId,int Id);
         Task<TransactionDTO> CreateTransactionAsync(int userId, CreateTransactionDTO transactionDTO);
         Task DeleteTransactionAsync(int userId, int transactionId);

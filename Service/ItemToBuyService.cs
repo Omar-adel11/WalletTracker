@@ -14,6 +14,7 @@ using Domain.Exceptions.NullReferenceException;
 using ServiceAbstraction;
 using ServiceAbstraction.DTOs.InstallmentsDTOs;
 using ServiceAbstraction.DTOs.ItemToBuyDTOs;
+using Shared;
 
 namespace Service
 {
@@ -21,19 +22,21 @@ namespace Service
     {
         IGenericRepository<ItemToBuy> _repo = _unitOfWork.Repository<ItemToBuy>();
 
-        public async Task<IEnumerable<ItemToBuyDTO>> GetAllItemsToBuyAsync(int UserId)
+        public async Task<PagedResult<ItemToBuyDTO>> GetAllItemsToBuyAsync(int UserId, int? PageNumber = 1, int? PageSize = 5)
         {
-            var Items = await _repo.GetAsync(i => i.UserId == UserId, i => i.Category!, i => i.Wallet!);
-            if (!Items.Any()) throw new EntityNotFoundException("Item");
-            return _mapper.Map<IEnumerable<ItemToBuyDTO>>(Items);
+            var Items = await _repo.GetAsyncFilteredWithPaginate(i => i.UserId == UserId,
+                                                                 i=>i.CreatedAt,
+                                                                 PageNumber,
+                                                                 PageSize,
+                                                                 i => i.Category!, i => i.Wallet!);
+            if (!Items.Items.Any()) throw new EntityNotFoundException("Item");
+            return _mapper.Map<PagedResult<ItemToBuyDTO>>(Items);
 
         }
 
         public async Task<ItemToBuyDTO> GetItemToBuyByIdAsync(int Id,int userId)
         {
-            var Item = await _repo.GetByIdAsync(Id, i => i.Category!, i => i.Wallet!);
-            if (Item is null) throw new EntityNotFoundException("Item");
-            if(Item.UserId !=  userId) throw new UnAuthorizedException("you are not authorized to get this item");
+            var Item = await GetAndAuthorizeItem(userId, Id);
             return _mapper.Map<ItemToBuyDTO>(Item);
         }
 
@@ -53,46 +56,23 @@ namespace Service
 
         public async Task<bool> CompletePurchaseAsync(int itemId,int userId)
         {
-            var item = await _repo.GetByIdAsync(itemId, i => i.Wallet!,i => i.Category!);
-            if (item is null) throw new EntityNotFoundException("Item");
-            if (item.UserId != userId) throw new UnAuthorizedException("you are not authorized to do purchase this item");
-            if (!item.IsAchieved) throw new ItemToBuyBalanceException();
+            var Item = await GetAndAuthorizeItem(userId, itemId);
+            if (!Item.IsAchieved) throw new ItemToBuyBalanceException();
 
-            item.Wallet.Pended -= item.Price.Amount;
-
-            var transaction = new Transaction
-            {
-                WalletId = item.WalletId,
-                UserId = item.UserId,
-                CategoryId = item.CategoryId,
-                Amount = item.Price, // The final cost
-                Description = $"Purchased Item: {item.Name}",
-                Type = TransactionType.Expense,
-                Date = DateTimeOffset.UtcNow,
-                CreatedAt = DateTimeOffset.UtcNow
-            };
-
-            await _unitOfWork.Repository<Transaction>().AddAsync(transaction);
-            
+            Item.Wallet.ApplyTransaction(TransactionType.Expense, MoneySource.Pended,Item.Price.Amount, Item.CategoryId.Value, $"purchase {Item.Name}");
             return await _unitOfWork.CompleteAsync() > 0;
         }
 
         public async Task DeleteItemAsync(int itemId,int userId)
         {
-            var Item = await _repo.GetByIdAsync(itemId);
-            if (Item is null) throw new EntityNotFoundException("Item");
-            if (Item.UserId != userId) throw new UnAuthorizedException("you are not authorized to delete this item");
-            var walletRepo =  _unitOfWork.Repository<Wallet>();
-            var wallet = await walletRepo.GetByIdAsync(Item.WalletId);
-            if (wallet is null) throw new EntityNotFoundException("wallet");
+            var Item = await GetAndAuthorizeItem(userId, itemId);
+           
             using var transaction = await _unitOfWork.BeginTransactionAsync();
             try
             {
-                wallet.Pended -= Item.Amount.Amount;
-                wallet.Cash += Item.Amount.Amount;
-                _repo.Delete(Item);
-                walletRepo.Update(wallet);
-                
+                Item.Wallet.ApplyTransaction(TransactionType.Income, MoneySource.Cash, Item.Amount.Amount, Item.CategoryId.Value, $"return the saved money for {Item.Name}");
+                Item.Wallet.ApplyTransaction(TransactionType.Expense, MoneySource.Pended, Item.Amount.Amount, Item.CategoryId.Value, $"return the saved money for {Item.Name}");
+
                 await _unitOfWork.CompleteAsync();
                 await transaction.CommitAsync();
             }
@@ -106,73 +86,70 @@ namespace Service
 
         public async Task UpdateItemAsync(int userId, UpdateItemToBuyDTO updateItemToBuyDTO)
         {
-            var item = await _repo.GetByIdAsync(updateItemToBuyDTO.Id,i=>i.Category!,id=>id.Wallet!);
-            if(item is null) throw new EntityNotFoundException("Item");
-            if (item.UserId != userId) throw new UnAuthorizedException("you are not authorized to update this item");
-            item.CategoryId = updateItemToBuyDTO.CategoryId ?? item.CategoryId;
-            item.Name = updateItemToBuyDTO.Name ?? item.Name;
+            var Item = await GetAndAuthorizeItem(userId, updateItemToBuyDTO.Id);
+            Item.CategoryId = updateItemToBuyDTO.CategoryId ?? Item.CategoryId;
+            Item.Name = updateItemToBuyDTO.Name ?? Item.Name;
             if(updateItemToBuyDTO.Price.HasValue)
             {
-                item.Price = new Money(updateItemToBuyDTO.Price.Value,item.Price.Currency);
+                Item.Price = new Money(updateItemToBuyDTO.Price.Value, Item.Price.Currency);
             }
-            item.UpdatedAt = DateTimeOffset.UtcNow;
-            _repo.Update(item);
+            Item.UpdatedAt = DateTimeOffset.UtcNow;
+            _repo.Update(Item);
             await _unitOfWork.CompleteAsync();
         }
        
         public async Task<bool> SaveMoneyASync(int userId,SaveMoneyDTO dto)
         {
-            var item = await _repo.GetByIdAsync(dto.Id, i => i.Wallet!);
-            if (item is null) throw new EntityNotFoundException("Item");
+            var Item = await GetAndAuthorizeItem(userId, dto.Id);
+            if (Item.Wallet.id != dto.walletId) return false;
+            if(Item.IsAchieved) return false; // Can't save money for an already achieved item
 
-            if (item.Wallet.id != dto.walletId) return false;
-            if(item.IsAchieved) return false; // Can't save money for an already achieved item
-            if(item.UserId != userId) throw new UnAuthorizedException("you are not authorized to save money for this item");
-            bool isCash = dto.source == MoneySource.Cash;
-            bool isCredit = dto.source == MoneySource.Credit;
-
-            // 1. Validation & Initial Deduction
-            if (!isCash && !isCredit) return false;
-            if (isCash && item.Wallet.Cash < dto.amount) return false;
-            if (isCredit && item.Wallet.Credit < dto.amount) return false;
-
-
-            decimal remaining = item.Price.Amount - item.Amount.Amount;
-            if (remaining < 0)
-            {
-                item.IsAchieved = true;
-                return false;
-            }
-            decimal amountToSave = Math.Min(dto.amount, remaining);
-            decimal change = dto.amount - amountToSave;
-
-           
-            if (isCash) item.Wallet.Cash -= amountToSave;
-            else item.Wallet.Credit -= amountToSave;
-
-            
-            item.Amount = item.Amount with { Amount = item.Amount.Amount + amountToSave };
-            item.Wallet.Pended += amountToSave;
-
-            // 3. Achievement & Change Logic
-            if (item.Amount.Amount >= item.Price.Amount)
-            {
-                item.IsAchieved = true;
-              
-            }
-
-
-            if (change > 0)
+            using var transaction = await _unitOfWork.BeginTransactionAsync();
+            try
             {
 
-                if (isCash) item.Wallet.Cash += change;
-                else item.Wallet.Credit += change;
+                decimal remaining = Item.Price.Amount - Item.Amount.Amount;
+                if (remaining < 0)
+                {
+                    Item.IsAchieved = true;
+                    return false;
+                }
+                decimal amountToSave = Math.Min(dto.amount, remaining);
+                decimal change = dto.amount - amountToSave;
 
 
+                Item.Wallet.ApplyTransaction(TransactionType.Expense, MoneySource.Cash, amountToSave, Item.CategoryId.Value, $"save money for {Item.Name}");
+                Item.Wallet.ApplyTransaction(TransactionType.Income, MoneySource.Pended, amountToSave, Item.CategoryId.Value, $"save saved money for {Item.Name}");
+
+
+                if (Item.Amount.Amount >= Item.Price.Amount)
+                {
+                    Item.IsAchieved = true;
+
+                }
+
+                Item.UpdatedAt = DateTimeOffset.UtcNow;
+
+                await _unitOfWork.CompleteAsync();
+                await transaction.CommitAsync();
+                
+                return true;
             }
-            item.UpdatedAt = DateTimeOffset.UtcNow;
-            return await _unitOfWork.CompleteAsync() > 0;
+            catch (Exception ex)
+            {
+                await transaction.RollbackAsync();
+                throw;
+            }
+
+          
         }
 
+        private async Task<ItemToBuy> GetAndAuthorizeItem(int userId,int itemId)
+        {
+            var Item = await _repo.GetByIdAsync(itemId, i => i.Category!, i => i.Wallet!);
+            if (Item is null) throw new EntityNotFoundException("Item");
+            if (Item.UserId != userId) throw new UnAuthorizedException("you are not authorized to get this item");
+            return Item;
+        }
     }
 }

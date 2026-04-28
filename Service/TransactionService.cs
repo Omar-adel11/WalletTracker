@@ -29,7 +29,7 @@ namespace Service
             return _mapper.Map<TransactionDTO>(transaction);
         }
 
-        public async Task<PagedResult<TransactionDTO>> GetTransactionByWalletAsync(int userId, int walletId, int PageSize, int PageNumber)
+        public async Task<PagedResult<TransactionDTO>> GetTransactionByWalletAsync(int userId, int walletId, int? PageNumber = 1, int? PageSize = 5)
         {
             var wallet = await unitOfWork.Repository<Wallet>().GetByIdAsync(walletId);
             if (wallet == null) throw new EntityNotFoundException("Wallet");

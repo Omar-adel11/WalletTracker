@@ -21,9 +21,9 @@ namespace Presentation
         private int userId => int.Parse(User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value);
 
         [HttpGet]
-        public async Task<IActionResult> GetInstallments()
+        public async Task<IActionResult> GetInstallments([FromQuery]int? pageNumber,int? pageSize)
         {
-            var result = await _serviceManager.InstallmentsService.GetAllInstallmentsAsync(userId);
+            var result = await _serviceManager.InstallmentsService.GetAllInstallmentsAsync(userId, pageNumber, pageSize);
             return Ok(result);
         }
 

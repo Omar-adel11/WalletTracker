@@ -13,20 +13,25 @@ using Domain.Exceptions.MoneyInvalidOperationException;
 using Domain.Exceptions.NullReferenceException;
 using ServiceAbstraction;
 using ServiceAbstraction.DTOs.InstallmentsDTOs;
+using Shared;
 
 namespace Service
 {
     public class InstallmentsService(IUnitOfWork _unitOfWork,IMapper _mapper) : IInstallmentsService
     {
         private IGenericRepository<Installments> _repo = _unitOfWork.Repository<Installments>();
-        public async Task<IEnumerable<InstallmentDTO>> GetAllInstallmentsAsync(int userId)
+        public async Task<PagedResult<InstallmentDTO>> GetAllInstallmentsAsync(int userId, int? PageNumber = 1, int? PageSize = 5)
         {
-            var installments = await _repo.GetAsync(i=>i.UserId ==  userId, i => i.Category!);
-            if(!installments.Any())
+            var installments = await _repo.GetAsyncFilteredWithPaginate(i=>i.UserId ==  userId,
+                                                                        i=>i.CreatedAt,
+                                                                        PageNumber,
+                                                                        PageSize,
+                                                                        i => i.Category!);
+            if(!installments.Items.Any())
             {
                 throw new EntityNotFoundException("installment");
             }
-            var installmentsDTO = _mapper.Map<IEnumerable<InstallmentDTO>>(installments);
+            var installmentsDTO = _mapper.Map<PagedResult<InstallmentDTO>>(installments);
             return installmentsDTO;
         }
         

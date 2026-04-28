@@ -19,9 +19,9 @@ namespace Presentation
         private int userId => int.Parse(User.Claims.FirstOrDefault(c=>c.Type == ClaimTypes.NameIdentifier)?.Value)!;
 
         [HttpGet]
-        public async Task<IActionResult> GetAllItems()
+        public async Task<IActionResult> GetAllItems([FromQuery] int? PageNumber, int? PageSize)
         {
-            var result = await _serviceManager.ItemToBuyService.GetAllItemsToBuyAsync(userId);
+            var result = await _serviceManager.ItemToBuyService.GetAllItemsToBuyAsync(userId,PageNumber,PageSize);
             return Ok(result);
         }
 

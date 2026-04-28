@@ -12,6 +12,7 @@ using Domain.Exceptions.BadRequestException;
 using Domain.Exceptions.NullReferenceException;
 using ServiceAbstraction;
 using ServiceAbstraction.DTOs.BudgetDTOs;
+using Shared;
 
 namespace Service
 {
@@ -21,25 +22,21 @@ namespace Service
         private IGenericRepository<Budget> _repo = _unitOfWork.Repository<Budget>();
         public async Task<BudgetDTO> GetBudgetAsync(int BudgetId, int userId)
         {
-            Budget? budget = await GetAndAuthorizeBudget(BudgetId, userId);
+            var budget = await GetAndAuthorizeBudget(BudgetId, userId);
             var budgetDTO = _mapper.Map<BudgetDTO>(budget);
             return budgetDTO;
         }
 
-        private async Task<Budget?> GetAndAuthorizeBudget(int BudgetId, int userId)
-        {
-            var budget = await _repo.GetByIdAsync(BudgetId, b => b.Category!, b => b.Wallet!);
-            if (budget is null) throw new EntityNotFoundException("Budget");
-            if (budget.Wallet.UserId != userId) throw new EntityNotFoundException($"Budget with id :{BudgetId} for this user");
-            return budget;
-        }
 
-        public async Task<IEnumerable<BudgetDTO>> GetBudgetsByUserIdAsync(int userId)
+        public async Task<PagedResult<BudgetDTO>> GetBudgetsByUserIdAsync(int userId, int? PageNumber = 1, int? PageSize = 5)
         {
-            var budgets = await _repo.GetAsync(b => b.UserId == userId,
-                                               b => b.Category!, b => b.Wallet!);
-            if (!budgets.Any()) throw new EntityNotFoundException("Budget");
-            var budgetDTOs = _mapper.Map<IEnumerable<BudgetDTO>>(budgets);
+            var budgets = await _repo.GetAsyncFilteredWithPaginate(b => b.UserId == userId,
+                                                                   b=>b.CreatedAt,
+                                                                   PageNumber,
+                                                                   PageSize,
+                                                                   b => b.Category!, b => b.Wallet!);
+            if (!budgets.Items.Any()) throw new EntityNotFoundException("Budget");
+            var budgetDTOs = _mapper.Map<PagedResult<BudgetDTO>>(budgets);
             return budgetDTOs;
         }
 
@@ -59,9 +56,7 @@ namespace Service
 
         public async Task DeleteBudgetAsync(int budgetId,int userId)
         {
-            var budget = await _repo.GetByIdAsync(budgetId,b=>b.Wallet);
-            if(budget is null) throw new EntityNotFoundException("Budget");
-            if (budget.Wallet.UserId != userId) throw new EntityNotFoundException($"Budget with id :{budgetId} for this user");
+            var budget = await GetAndAuthorizeBudget(budgetId, userId);
             _repo.Delete(budget);
             await _unitOfWork.CompleteAsync();
         }
@@ -71,59 +66,35 @@ namespace Service
         public async Task<bool> SpendAsync(int budgetId,int userId, decimal amount, MoneySource source)
         {
             // 1. Fetch budget with Wallet included (to update balance)
-            var budget = await _repo.GetByIdAsync(budgetId, b => b.Wallet!);
-            if (budget is null) throw new EntityNotFoundException("Budget");
-            if (budget.Wallet.UserId != userId) throw new EntityNotFoundException($"Budget with id :{budgetId} for this user");
+            var budget = await GetAndAuthorizeBudget(budgetId, userId);
 
             // 2. Check if the budget has enough "Room" left
             if ((budget.Limit.Amount - budget.Spent.Amount) < amount) return false;
 
-            // 3. Check if the Wallet has enough actual money
-            var wallet = budget.Wallet;
-            if (source == MoneySource.Cash && wallet.Cash < amount) return false;
-            if (source == MoneySource.Credit && wallet.Credit < amount) return false;
+            
+           budget.Wallet.ApplyTransaction(TransactionType.Expense,source,amount,budget.CategoryId,$"spend money for budget {budget.Name}");
+           budget.Spent = budget.Spent with { Amount = budget.Spent.Amount + amount };
 
-            // 4. Update the Budget progress
-            budget.Spent = budget.Spent with { Amount = budget.Spent.Amount + amount };
-
-            // 5. Update the Wallet balance
-            if (source == MoneySource.Cash) wallet.Cash -= amount;
-            else wallet.Credit -= amount;
-
-            // 6. Create a Transaction record automatically
-            var transaction = new Transaction
-            {
-                WalletId = budget.WalletId,
-                UserId = budget.UserId,
-                CategoryId = budget.CategoryId, // Link to the same category as the budget
-                Amount = new Money { Amount = amount, Currency = budget.Limit.Currency },
-                Description = $"Budget Spend: {budget.Category?.Name ?? "General"}",
-                Type = TransactionType.Expense,
-                MoneySource = source,
-                CreatedAt = DateTimeOffset.UtcNow
-            };
-
-            await _unitOfWork.Repository<Transaction>().AddAsync(transaction);
-
-            // 7. Atomic Save: Everything updates together or nothing does
             _repo.Update(budget);
             return await _unitOfWork.CompleteAsync() > 0;
         }
 
         public async Task UpdateBudgetAsync(int userId, UpdateBudgetDTO updateBudgetDTO)
         {
-            // 1. Fetch the existing tracked entity
-            var budget = await _repo.GetByIdAsync(updateBudgetDTO.Id,b=>b.Wallet);
-            if (budget is null) throw new EntityNotFoundException("Budget");
-            if (budget.Wallet.UserId != userId) throw new EntityNotFoundException($"Budget with id :{updateBudgetDTO.Id} for this user");
-
-            // 2. Map the DTO values ONTO the existing tracked entity
+            var budget = await GetAndAuthorizeBudget(updateBudgetDTO.Id, userId);
             _mapper.Map(updateBudgetDTO, budget);
 
-            // 3. Update audit fields and save
             budget.UpdatedAt = DateTimeOffset.UtcNow;
             _repo.Update(budget);
             await _unitOfWork.CompleteAsync();
         }
+        private async Task<Budget?> GetAndAuthorizeBudget(int BudgetId, int userId)
+        {
+            var budget = await _repo.GetByIdAsync(BudgetId, b => b.Category!, b => b.Wallet!);
+            if (budget is null) throw new EntityNotFoundException("Budget");
+            if (budget.Wallet.UserId != userId) throw new EntityNotFoundException($"Budget with id :{BudgetId} for this user");
+            return budget;
+        }
+
     }
 }

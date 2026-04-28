@@ -4,12 +4,13 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using ServiceAbstraction.DTOs.ItemToBuyDTOs;
+using Shared;
 
 namespace ServiceAbstraction
 {
     public interface IItemToBuyService
     {
-        Task<IEnumerable<ItemToBuyDTO>> GetAllItemsToBuyAsync(int UserId);
+        Task<PagedResult<ItemToBuyDTO>> GetAllItemsToBuyAsync(int UserId, int? PageNumber = 1, int? PageSize = 5);
         Task<ItemToBuyDTO> GetItemToBuyByIdAsync(int Id,int userId);
         Task<ItemToBuyDTO> AddItemAsync(int userId,CreateItemToBuyDTO createItemToBuy);
         Task DeleteItemAsync(int itemId,int userId);
