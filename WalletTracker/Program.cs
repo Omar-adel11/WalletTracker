@@ -107,6 +107,7 @@ namespace WalletTracker
             builder.Services.AddScoped<ICategoryService, CategoryService>();
             builder.Services.AddScoped<IItemToBuyService, ItemToBuyService>();
             builder.Services.AddScoped<IInstallmentsService, InstallmentsService>();
+            builder.Services.AddScoped<IAnalyticsService, AnalyticsService>();
             builder.Services.AddScoped<IServiceManager, ServiceManager>();
             #endregion
 

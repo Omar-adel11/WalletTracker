@@ -17,5 +17,6 @@ namespace ServiceAbstraction
         ICategoryService CategoryService { get; }
         IItemToBuyService ItemToBuyService { get; }
         IInstallmentsService InstallmentsService { get; }
+        IAnalyticsService AnalyticsService { get; }
     }
 }
