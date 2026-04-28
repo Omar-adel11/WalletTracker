@@ -6,27 +6,33 @@ using System.Threading.Tasks;
 using AutoMapper;
 using Domain.Contracts;
 using Domain.Entities;
+using Domain.Exceptions.AuthExceptions;
 using Domain.Exceptions.NullReferenceException;
 using ServiceAbstraction;
 using ServiceAbstraction.DTOs.CategoryDtos;
+using ServiceAbstraction.DTOs.TransactionDtos;
+using Shared;
 
 namespace Service
 {
     public class CategoryService(IUnitOfWork _unitOfWork,IMapper _mapper) : ICategoryService
     {
         private IGenericRepository<Category> _repo = _unitOfWork.Repository<Category>();
-        public async Task<ICollection<CategoryDto>> GetAllCategoriesAsync(int? UserId = null)
+        public async Task<PagedResult<CategoryDto>> GetAllCategoriesAsync(int? UserId = null, int? PageNumber = 1, int? PageSize = 5)
         {
-            var categories = await _repo.GetAsync(c => c.UserId == null || c.UserId == UserId);
-            if (!categories.Any()) throw new EntityNotFoundException("category");
-            var categoryDtos = _mapper.Map<ICollection<CategoryDto>>(categories);
+            var categories = await _repo.GetAsyncFilteredWithPaginate(c => c.UserId == null || c.UserId == UserId,
+                                                                        t => t.CreatedAt,
+                                                                        PageNumber,
+                                                                        PageSize   
+                                                                        );
+            if (!categories.Items.Any()) throw new EntityNotFoundException("category");
+            var categoryDtos = _mapper.Map<PagedResult<CategoryDto>>(categories);
             return categoryDtos;
         }
 
-        public async Task<CategoryDto> GetCategoryByIdAsync(int id)
+        public async Task<CategoryDto> GetCategoryByIdAsync(int userId,int id)
         {
-            var category = await _repo.GetByIdAsync(id);
-            if (category is null) throw new EntityNotFoundException("Category");
+            var category = await GetAndAuthorize(userId, id);
             var categoryDto = _mapper.Map<CategoryDto>(category);
             return categoryDto;
         }
@@ -43,27 +49,32 @@ namespace Service
             return categoryDto;
         }
 
-        public async Task DeleteCategoryAsync(int CategoryId)
+        public async Task DeleteCategoryAsync(int userId, int CategoryId)
         {
-            var category = await _repo.GetByIdAsync(CategoryId);
-            if (category is null) throw new EntityNotFoundException("Category");
-
+            var category = await GetAndAuthorize(userId, CategoryId);
             _repo.Delete(category);
             await _unitOfWork.CompleteAsync();
         }
 
         
 
-        public async Task UpdateCategoryAsync(int CategoryId, string newName)
+        public async Task UpdateCategoryAsync(int userId,int CategoryId, string newName)
         {
-            var category = await _repo.GetByIdAsync(CategoryId);
-            if (category is null) throw new EntityNotFoundException("Category");
+            var category = await GetAndAuthorize(userId, CategoryId);
 
             category.Name = newName;
             category.UpdatedAt = DateTimeOffset.UtcNow;
             _repo.Update(category);
             await _unitOfWork.CompleteAsync();
 
+        }
+
+        private async Task<Category> GetAndAuthorize(int userId, int id)
+        {
+            var category = await _repo.GetByIdAsync(id);
+            if (category is null) throw new EntityNotFoundException("Category");
+            if (category.UserId != userId) throw new UnAuthorizedException("you are not authorized to get this Category");
+            return category;
         }
     }
 }

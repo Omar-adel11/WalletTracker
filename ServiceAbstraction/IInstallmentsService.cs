@@ -5,12 +5,13 @@ using System.Text;
 using System.Threading.Tasks;
 using Domain.Entities.Enum;
 using ServiceAbstraction.DTOs.InstallmentsDTOs;
+using Shared;
 
 namespace ServiceAbstraction
 {
     public interface IInstallmentsService
     {
-        Task<IEnumerable<InstallmentDTO>> GetAllInstallmentsAsync(int userId);
+        Task<PagedResult<InstallmentDTO>> GetAllInstallmentsAsync(int userId, int? PageNumber = 1, int? PageSize = 5);
         Task<InstallmentDTO> GetInstallmentsByIdAsync(int id,int userId);
         Task<InstallmentDTO> CreateInstallmentAsync(int userId, CreateInstallmentDTO createInstallmentDTO);
         Task DeleteInstallmentAsync(int installmentId, int userId);

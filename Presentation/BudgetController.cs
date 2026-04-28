@@ -17,9 +17,9 @@ namespace Presentation {
     {
         private int userId => int.Parse(User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value!);
         [HttpGet]
-        public async Task<IActionResult> GetBugdets()
+        public async Task<IActionResult> GetBugdets([FromQuery] int? PageNumber, int? PageSize)
         {
-            var result = await _serviceManager.BudgetService.GetBudgetsByUserIdAsync(userId);
+            var result = await _serviceManager.BudgetService.GetBudgetsByUserIdAsync(userId,PageNumber,PageSize);
             return Ok(result);
         }
 
