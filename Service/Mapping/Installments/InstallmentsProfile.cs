@@ -25,9 +25,10 @@ namespace Service.Mapping.Installments
                 .ForMember(dest => dest.User, opt => opt.Ignore())
                 .ForMember(dest => dest.Category, opt => opt.Ignore())
                 .ForMember(dest => dest.transactions, opt => opt.Ignore());
-            
-            CreateMap<Domain.Entities.Installments, UpdateInstallmentDTO>()
-                     .ForAllMembers(opts => opts.Condition((src,dest,srcMember) => srcMember != null));
+
+            CreateMap<UpdateInstallmentDTO, Domain.Entities.Installments>()
+    .ForAllMembers(opts =>
+        opts.Condition((src, dest, srcMember) => srcMember != null));
         }
     }
 }

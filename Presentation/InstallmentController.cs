@@ -58,7 +58,7 @@ namespace Presentation
         [HttpPost("pay-installment/{id}")]
         public async Task<IActionResult> PayInstallment([FromRoute] int id, [FromBody] PayInstallmentDTO dto)
         {
-            var result = await _serviceManager.InstallmentsService.payInstallmentAsync(id,dto);
+            var result = await _serviceManager.InstallmentsService.payInstallmentAsync(id,userId,dto);
             return Ok(result);
         }
     }

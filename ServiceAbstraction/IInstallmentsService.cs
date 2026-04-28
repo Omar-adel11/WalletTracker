@@ -15,6 +15,6 @@ namespace ServiceAbstraction
         Task<InstallmentDTO> CreateInstallmentAsync(int userId, CreateInstallmentDTO createInstallmentDTO);
         Task DeleteInstallmentAsync(int installmentId, int userId);
         Task UpdateInstallmentAsync(int userId,int id,UpdateInstallmentDTO updateInstallmentDTO);
-        Task<bool> payInstallmentAsync(int installmentId, PayInstallmentDTO dto);
+        Task<bool> payInstallmentAsync(int installmentId,int userId, PayInstallmentDTO dto);
     }
 }

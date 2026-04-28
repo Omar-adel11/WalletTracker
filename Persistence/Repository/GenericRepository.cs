@@ -89,7 +89,7 @@ namespace Persistence.Repository
                          .Skip((page - 1) * size)
                          .Take(size);
 
-            return new PagedResult<T>(query.ToList(),page,size,count);
+            return new PagedResult<T>(query.ToList(), count, page,size);
         }
 
         public async Task<int> CountAsync(Expression<Func<T, bool>> predicate) => await _context.Set<T>().CountAsync(predicate);
