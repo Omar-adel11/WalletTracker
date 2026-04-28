@@ -1,13 +1,17 @@
 
 using System.Text;
+using System.Threading;
+using System.Threading.RateLimiting;
 using AutoMapper;
 using Domain.Contracts;
 using Domain.Entities;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Writers;
 using Persistence.Data.Contexts;
@@ -134,7 +138,57 @@ namespace WalletTracker
             });
             #endregion
 
+            #region RateLimiter
+            builder.Services.AddRateLimiter(LimiterOptions =>
+            {
+                LimiterOptions.AddPolicy("AuthPolicy", context =>
+                                         RateLimitPartition.GetFixedWindowLimiter(
+                                        context.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+                                        _ => new FixedWindowRateLimiterOptions
+                                        {
+                                            PermitLimit = 5,
+                                            Window = TimeSpan.FromMinutes(1),
+                                            QueueLimit = 0
+                                        }));
 
+                LimiterOptions.GlobalLimiter = PartitionedRateLimiter.Create<HttpContext, string>(context =>
+                                        RateLimitPartition.GetSlidingWindowLimiter(
+                                        context.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+                                        _ => new SlidingWindowRateLimiterOptions
+                                        {
+                                            PermitLimit = 100,
+                                            Window = TimeSpan.FromMinutes(1),
+                                            SegmentsPerWindow = 4,
+                                            QueueLimit = 10,
+                                            QueueProcessingOrder = QueueProcessingOrder.OldestFirst
+                                        }));
+
+
+                LimiterOptions.AddPolicy("AnalyticsPolicy", context =>
+                                RateLimitPartition.GetFixedWindowLimiter(
+                                    context.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+                                    _ => new FixedWindowRateLimiterOptions
+                                    {
+
+                                        PermitLimit = 20,
+                                        Window = TimeSpan.FromMinutes(1),
+                                        QueueLimit = 0
+                                    })
+                                );
+
+                LimiterOptions.OnRejected = async (context, CancellationToken) =>
+                {
+                    context.HttpContext.Response.StatusCode = StatusCodes.Status429TooManyRequests;
+                    context.HttpContext.Response.Headers["Retry-After"] = "60";
+                    await context.HttpContext.Response.WriteAsJsonAsync(new
+                    {
+                        StatusCode = 429,
+                        Message = "Too many requests. Please try again later."
+                    }, CancellationToken);
+                };
+             
+            });
+            #endregion
 
             var app = builder.Build();
 
@@ -163,6 +217,7 @@ namespace WalletTracker
                 app.UseSwagger();
                 app.UseSwaggerUI();
             }
+            app.UseRateLimiter();
             app.UseStaticFiles();
             app.UseMiddleware<GlobalErrorHandlingMiddleware>();
             app.UseHttpsRedirection();  

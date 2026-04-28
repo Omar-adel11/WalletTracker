@@ -10,6 +10,7 @@ using Domain.Entities.Struct;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using ServiceAbstraction;
 using ServiceAbstraction.DTOs.WalletsDtos;
 

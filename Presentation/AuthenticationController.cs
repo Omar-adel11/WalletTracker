@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using Service;
 using ServiceAbstraction;
 using ServiceAbstraction.DTOs.Auth;
@@ -13,6 +14,7 @@ namespace Presentation
 {
     [ApiController]
     [Route("api/[controller]")]
+    [EnableRateLimiting("AuthPolicy")]
     public class AuthenticationController(IServiceManager _serviceManger) : ControllerBase
     {
 
