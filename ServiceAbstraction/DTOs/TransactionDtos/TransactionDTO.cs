@@ -10,6 +10,7 @@ namespace ServiceAbstraction.DTOs.TransactionDtos
 {
     public class TransactionDTO
     {
+        public int id { get; set; }
         public int WalletId { get; set; }
         public Money Amount { get; set; }
         public string? Description { get; set; }

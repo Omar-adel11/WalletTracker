@@ -51,20 +51,20 @@ namespace Presentation
 
         }
 
-        [HttpPut("Deposit/{walletid}")]
+        [HttpPatch("Deposit/{walletid}")]
         public async Task<IActionResult> Deposit(int walletid, [FromBody] WalletTransactionRequestDTO dto)
         {
             await _serviceManager.WalletService.DepositAsync(userId, walletid, dto.Amount, dto.Source);
             return NoContent();
         }
-        [HttpPut("Withdraw/{walletid}")]
+        [HttpPatch("Withdraw/{walletid}")]
         public async Task<IActionResult> Withdraw(int walletid, [FromBody] WalletTransactionRequestDTO dto)
         {
             await _serviceManager.WalletService.WithdrawAsync(userId, walletid, dto.Amount, dto.Source);
             return NoContent();
         }
 
-        [HttpPut("transaction-between-wallet/{fromWalletId}")]
+        [HttpPatch("transaction-between-wallet/{fromWalletId}")]
         public async Task<IActionResult> TransactionBetweenWallet( int fromWalletId, [FromBody] WalletTransactionRequestDTO dto)
         {
             await _serviceManager.WalletService.TransactionBetweenWalletAsync(userId, fromWalletId,dto.ToWalletId.Value,dto.ToUserName, dto.Amount, dto.Source);

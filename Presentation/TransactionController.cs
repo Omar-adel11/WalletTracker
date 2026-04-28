@@ -20,7 +20,7 @@ namespace Presentation
         [HttpGet]
         public async Task<IActionResult> GetTransactions( [FromQuery] int walletId, int PageSize, int PageNumber)
         {
-            var result = await _serviceManager.TransactionService.GetTransactionByWalletAsync(userId,walletId,PageSize, PageNumber);
+            var result = await _serviceManager.TransactionService.GetTransactionByWalletAsync(userId,walletId,PageNumber, PageSize);
             return Ok(result);
         }
 

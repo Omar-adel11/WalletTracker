@@ -9,6 +9,7 @@ namespace ServiceAbstraction.DTOs.InstallmentsDTOs
 {
     public class InstallmentDTO
     {
+        public int id { get; set; }
         public Money Amount { get; set; }
         public string? Description { get; set; }
         public DateTimeOffset StartDate { get; set; }

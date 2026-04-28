@@ -9,6 +9,7 @@ namespace ServiceAbstraction.DTOs.ItemToBuyDTOs
 {
     public class ItemToBuyDTO
     {
+        public int id { get; set; }
         public string Name { get; set; } = string.Empty;
         public Money Price { get; set; }
         public Money Amount { get; set; }

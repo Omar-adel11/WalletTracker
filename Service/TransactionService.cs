@@ -43,7 +43,8 @@ namespace Service
                                                                         t => t.Category!
                                                                         );
             if (!transactions.Items.Any()) throw new EntityNotFoundException("Transaction");
-            return _mapper.Map< PagedResult<TransactionDTO>>(transactions);
+            var result = _mapper.Map<PagedResult<TransactionDTO>>(transactions);
+            return result;
         }
 
         public async Task<TransactionDTO> CreateTransactionAsync(int userId, CreateTransactionDTO transactionDTO)

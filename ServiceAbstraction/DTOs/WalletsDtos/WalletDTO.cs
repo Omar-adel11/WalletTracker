@@ -9,6 +9,7 @@ namespace ServiceAbstraction.DTOs.WalletsDtos
 {
     public class WalletDTO
     {
+        public int id { get; set; }
         public Money TotalBalance => Cash + Credit + Pended;
         public Money Cash { get; set; }
         public Money Credit { get; set; }
