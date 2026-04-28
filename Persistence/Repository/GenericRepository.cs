@@ -80,7 +80,7 @@ namespace Persistence.Repository
             query = query.Where(Predicate);
 
             int page = pageNumber ?? 1;
-            int size = pageSize ?? 10;
+            int size = pageSize ?? 5;
 
             if (page < 1) page = 1;
             int count = await query.CountAsync();
