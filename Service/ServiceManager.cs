@@ -24,6 +24,7 @@ namespace Service
         private readonly Lazy<ICategoryService> _categoryService;
         private readonly Lazy<IItemToBuyService> _itemToBuyService;
         private readonly Lazy<IInstallmentsService> _installmentsService;
+        private readonly Lazy<IAnalyticsService> _analyticsService;
 
         public ServiceManager(
             IUnitOfWork unitOfWork,
@@ -40,6 +41,7 @@ namespace Service
             _categoryService = new Lazy<ICategoryService>(() => new CategoryService(unitOfWork, mapper));
             _itemToBuyService = new Lazy<IItemToBuyService>(() => new ItemToBuyService(unitOfWork, mapper));
             _installmentsService = new Lazy<IInstallmentsService>(() => new InstallmentsService(unitOfWork, mapper));
+            _analyticsService = new Lazy<IAnalyticsService>(() => new AnalyticsService(unitOfWork));
         }
 
         public IAuthenticationService AuthenticationService => _authService.Value;
@@ -50,5 +52,6 @@ namespace Service
         public ICategoryService CategoryService => _categoryService.Value;
         public IItemToBuyService ItemToBuyService => _itemToBuyService.Value;
         public IInstallmentsService InstallmentsService => _installmentsService.Value;
+        public IAnalyticsService AnalyticsService => _analyticsService.Value;
     }
 }
