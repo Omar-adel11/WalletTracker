@@ -18,5 +18,6 @@ namespace ServiceAbstraction
         IItemToBuyService ItemToBuyService { get; }
         IInstallmentsService InstallmentsService { get; }
         IAnalyticsService AnalyticsService { get; }
+        ICacheService CacheService { get; }
     }
 }

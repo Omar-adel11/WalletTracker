@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
+using Presentation.Attributes;
 using ServiceAbstraction;
 
 namespace Presentation
@@ -15,11 +16,13 @@ namespace Presentation
     [Route("api/[controller]")]
     [Authorize]
     [EnableRateLimiting("AnalyticsPolicy")]
+    [Cache("Dashboard")]
     public class AnalyticsController(IServiceManager _serviceManager) : ControllerBase
     {
         int userId => int.Parse(User.Claims.FirstOrDefault(c=>c.Type == ClaimTypes.NameIdentifier)!.Value);
 
         [HttpGet("dashboard/{walletId}")]
+        
         public async Task<IActionResult> GetDashboard([FromRoute] int walletId, [FromQuery] DateTimeOffset? from, DateTimeOffset? to)
         {
             var result = await _serviceManager.AnalyticsService.GetDashboardAsync(userId, walletId, from, to);

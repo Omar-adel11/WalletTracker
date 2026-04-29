@@ -9,6 +9,9 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
+using Microsoft.Extensions.Options;
+using Presentation.Attributes;
+using Service.Helper.Cache;
 using ServiceAbstraction;
 
 namespace Presentation
@@ -16,11 +19,12 @@ namespace Presentation
     [ApiController]
     [Route("api/[controller]")]
     [Authorize]
-    public class CategoryController(IServiceManager _serviceManager) : ControllerBase
+    public class CategoryController(IServiceManager _serviceManager,IOptions<CacheSettings> _cacheSettings) : ControllerBase
     {
+        private readonly TimeSpan categoryTTL = TimeSpan.FromHours(_cacheSettings.Value.CategoryExpirationHours);
         private int userId => int.Parse(User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value)!;
         [HttpGet]
-        
+        [Cache("Category")]
         public async Task<IActionResult> GetAllCategories([FromQuery] int? PageNumber, int? PageSize)
         {
             var categories = await _serviceManager.CategoryService.GetAllCategoriesAsync(userId, PageNumber, PageSize);
@@ -29,7 +33,7 @@ namespace Presentation
         }
 
         [HttpGet("{id}")]
-
+        [Cache("Category")]
         public async Task<IActionResult> GetCategory([FromRoute]int id)
         {
             var category = await _serviceManager.CategoryService.GetCategoryByIdAsync(userId,id);

@@ -1,32 +1,27 @@
 
 using System.Text;
-using System.Threading;
 using System.Threading.RateLimiting;
-using AutoMapper;
 using Domain.Contracts;
 using Domain.Entities;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Options;
+using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
-using Microsoft.OpenApi.Writers;
 using Persistence.Data.Contexts;
 using Persistence.Data.DBInitializer;
 using Persistence.Interceptors;
 using Persistence.Repository;
 using Service;
 using Service.Helper;
+using Service.Helper.Cache;
 using Service.Mapping.Budget;
-using Service.Mapping.Wallet;
 using ServiceAbstraction;
 using ServiceAbstraction.Helper.Email;
 using Shared.Errors;
+using StackExchange.Redis;
 using WalletTracker.Middlewares;
-using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace WalletTracker
 {
@@ -44,7 +39,7 @@ namespace WalletTracker
             builder.Services.AddSwaggerGen();
 
             #region Register services
-
+            
             var ConnectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 
             builder.Services.AddSingleton<SoftDeleteInterceptor>();
@@ -72,6 +67,19 @@ namespace WalletTracker
             builder.Services.AddAutoMapper(typeof(BudgetProfile).Assembly);
 
             builder.Services.AddScoped<IDbInitializer, DbInitializer>();
+            builder.Services.AddSingleton<ICacheService, CacheService>();
+            builder.Services.AddSingleton<ICacheRepository, CacheRepository>();
+            builder.Services.AddSingleton<IConnectionMultiplexer>((ServiceProvider) =>
+            {
+                var connectionString = builder.Configuration.GetConnectionString("Redis") ?? "localhost";
+                var config = ConfigurationOptions.Parse(connectionString);
+                config.AbortOnConnectFail = false; // Don't crash if Redis is down
+                config.ConnectRetry = 3;
+                config.ReconnectRetryPolicy = new ExponentialRetry(5000);
+                return ConnectionMultiplexer.Connect(config);
+            });
+            builder.Services.Configure<CacheSettings>(
+    builder.Configuration.GetSection("CacheSettings"));
             #endregion
 
             #region Auth

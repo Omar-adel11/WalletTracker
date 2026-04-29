@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
+using Presentation.Attributes;
 using ServiceAbstraction;
 using ServiceAbstraction.DTOs.ItemToBuyDTOs;
 
@@ -15,6 +16,7 @@ namespace Presentation
     [ApiController]
     [Route("api/[controller]")]
     [Authorize]
+    [Cache("")]
     public class ItemToBuyController(IServiceManager _serviceManager) : ControllerBase
     {
         private int userId => int.Parse(User.Claims.FirstOrDefault(c=>c.Type == ClaimTypes.NameIdentifier)?.Value)!;

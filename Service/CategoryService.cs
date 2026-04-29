@@ -73,7 +73,7 @@ namespace Service
         {
             var category = await _repo.GetByIdAsync(id);
             if (category is null) throw new EntityNotFoundException("Category");
-            if (category.UserId != userId) throw new UnAuthorizedException("you are not authorized to get this Category");
+            if (category.UserId != userId && category.UserId is not null) throw new UnAuthorizedException("you are not authorized to get this Category");
             return category;
         }
     }
