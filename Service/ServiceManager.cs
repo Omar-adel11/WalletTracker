@@ -25,13 +25,15 @@ namespace Service
         private readonly Lazy<IItemToBuyService> _itemToBuyService;
         private readonly Lazy<IInstallmentsService> _installmentsService;
         private readonly Lazy<IAnalyticsService> _analyticsService;
+        private readonly Lazy<ICacheService> _cacheService;
 
         public ServiceManager(
             IUnitOfWork unitOfWork,
             IMapper mapper,
             UserManager<User> userManager,
             IConfiguration config,
-            IEmailService emailService, IWebHostEnvironment _environment) // EmailService injected from DI
+            IEmailService emailService, IWebHostEnvironment _environment,
+            ICacheRepository cacheRepository) // EmailService injected from DI
         {
             _authService = new Lazy<IAuthenticationService>(() => new AuthenticationService(mapper, userManager, config, emailService, unitOfWork,_environment));
             _emailService = new Lazy<IEmailService>(() => emailService);
@@ -42,6 +44,7 @@ namespace Service
             _itemToBuyService = new Lazy<IItemToBuyService>(() => new ItemToBuyService(unitOfWork, mapper));
             _installmentsService = new Lazy<IInstallmentsService>(() => new InstallmentsService(unitOfWork, mapper));
             _analyticsService = new Lazy<IAnalyticsService>(() => new AnalyticsService(unitOfWork));
+            _cacheService = new Lazy<ICacheService>(() => new CacheService(cacheRepository));
         }
 
         public IAuthenticationService AuthenticationService => _authService.Value;
@@ -53,5 +56,6 @@ namespace Service
         public IItemToBuyService ItemToBuyService => _itemToBuyService.Value;
         public IInstallmentsService InstallmentsService => _installmentsService.Value;
         public IAnalyticsService AnalyticsService => _analyticsService.Value;
+        public ICacheService CacheService => _cacheService.Value;
     }
 }

@@ -11,6 +11,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
+using Presentation.Attributes;
 using ServiceAbstraction;
 using ServiceAbstraction.DTOs.WalletsDtos;
 
@@ -23,6 +24,7 @@ namespace Presentation
     {
         private int userId => int.Parse(User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value)!;
         [HttpGet]
+        [Cache("Wallet")]
         public async Task<IActionResult> GetAllWallets()
         {
             var wallets = await _serviceManager.WalletService.GetAllWalletsAsync(userId);
@@ -31,6 +33,7 @@ namespace Presentation
         }
 
         [HttpGet("{id}")]
+        [Cache("Wallet")]
         public async Task<IActionResult> GetWalletById([FromRoute] int id)
         {
             var wallet = await _serviceManager.WalletService.GetWalletByIdAsync(userId,id);
