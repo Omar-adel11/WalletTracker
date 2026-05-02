@@ -26,7 +26,7 @@ namespace Presentation
         [Authorize]
         public async Task<IActionResult> InitiatePayment([FromBody] InitiatePaymentDTO dto)
         {
-            var result = await _serviceManager.SubscriptionService
+            var result = await _serviceManager.PaymentProvider
                 .InitiatePaymentAsync(UserId, dto);
             return Ok(result);
         }

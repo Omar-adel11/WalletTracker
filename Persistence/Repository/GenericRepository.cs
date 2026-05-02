@@ -67,7 +67,10 @@ namespace Persistence.Repository
             _context.Set<T>().Update(entity);
         }
 
-       
+        public async Task<T?> GetFirstOrDefaultAsync(Expression<Func<T, bool>> predicate)
+        {
+            return await _context.Set<T>().FirstOrDefaultAsync(predicate);
+        }
         public async Task<PagedResult<T>> GetAsyncFilteredWithPaginate(Expression<Func<T, bool>> Predicate, Expression<Func<T, object>> orderBy, int? pageNumber = 1, int? pageSize = 10, params Expression<Func<T, object>>[] includes)
         {
             IQueryable<T> query = _context.Set<T>();

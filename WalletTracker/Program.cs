@@ -200,12 +200,12 @@ namespace WalletTracker
             #endregion
 
             #region paymob
-            builder.Services.Configure<PaymobSettings>(
-    builder.Configuration.GetSection("PaymobSettings"));
+            builder.Services.Configure<PaymobSettings>(builder.Configuration.GetSection("PaymobSettings"));
 
             builder.Services.AddHttpClient<PaymobClient>();
 
             builder.Services.AddScoped<ISubscriptionService, SubscriptionService>();
+            builder.Services.AddScoped<IPaymentProvider, PaymobProvider>();
             #endregion
 
             var app = builder.Build();

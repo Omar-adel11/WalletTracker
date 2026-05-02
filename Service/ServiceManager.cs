@@ -30,6 +30,7 @@ namespace Service
         private readonly Lazy<IAnalyticsService> _analyticsService;
         private readonly Lazy<ICacheService> _cacheService;
         private readonly Lazy<ISubscriptionService> _subscriptionService;
+        private readonly Lazy<IPaymentProvider> _paymentProvider;
 
         public ServiceManager(
             IUnitOfWork unitOfWork,
@@ -39,7 +40,8 @@ namespace Service
             IEmailService emailService, IWebHostEnvironment _environment,
             ICacheRepository cacheRepository,
             PaymobClient paymobClient,
-            IOptions<PaymobSettings> options) // EmailService injected from DI
+            IOptions<PaymobSettings> options,
+            IPaymentProvider paymentProvider) // EmailService injected from DI
         {
             _authService = new Lazy<IAuthenticationService>(() => new AuthenticationService(mapper, userManager, config, emailService, unitOfWork,_environment));
             _emailService = new Lazy<IEmailService>(() => emailService);
@@ -51,7 +53,8 @@ namespace Service
             _installmentsService = new Lazy<IInstallmentsService>(() => new InstallmentsService(unitOfWork, mapper));
             _analyticsService = new Lazy<IAnalyticsService>(() => new AnalyticsService(unitOfWork));
             _cacheService = new Lazy<ICacheService>(() => new CacheService(cacheRepository));
-            _subscriptionService = new Lazy<ISubscriptionService>(() => new SubscriptionService(unitOfWork,paymobClient, options));
+            _paymentProvider = new Lazy<IPaymentProvider>(() => new PaymobProvider(unitOfWork,options,paymobClient));
+            _subscriptionService = new Lazy<ISubscriptionService>(() => new SubscriptionService(unitOfWork, paymentProvider, paymobClient, options));
         }
 
         public IAuthenticationService AuthenticationService => _authService.Value;
@@ -64,6 +67,7 @@ namespace Service
         public IInstallmentsService InstallmentsService => _installmentsService.Value;
         public IAnalyticsService AnalyticsService => _analyticsService.Value;
         public ICacheService CacheService => _cacheService.Value;
+        public IPaymentProvider PaymentProvider => _paymentProvider.Value;
         public ISubscriptionService SubscriptionService => _subscriptionService.Value;
     }
 }

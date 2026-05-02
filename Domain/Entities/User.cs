@@ -18,6 +18,7 @@ namespace Domain.Entities
         public DateTimeOffset UpdatedAt { get; set; }
 
         public string? PictureUrl { get; set; }
+        public bool IsPremium { get; set; } = false;
 
         //Navigation properties
         public ICollection<Category>? Categories { get; set; } = new HashSet<Category>();

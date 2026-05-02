@@ -7,11 +7,9 @@ using ServiceAbstraction.DTOs.SubsriptionDTO;
 
 namespace ServiceAbstraction
 {
-    public interface ISubscriptionService
+    public interface IPaymentProvider
     {
-
-        Task HandleWebhookAsync(string rawBody, string hmacHeader);
-
-        Task<SubscriptionStatusDTO> GetSubscriptionStatusAsync(int userId);
+        Task<PaymentInitiatedDTO> InitiatePaymentAsync(int userId, InitiatePaymentDTO dto);
+        Task VerifySignature(string rawBody, string hmacHeader);
     }
 }

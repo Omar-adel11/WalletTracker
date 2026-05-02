@@ -49,15 +49,12 @@ namespace Service
 
         public async Task<WalletDTO> CreateWalletAsync(CreateWalletDTO createWalletDTO)
         {
-            var userList = await _unitOfWork.Repository<User>()
-                                .GetAsync(u => u.Id == createWalletDTO.UserId);
-            var user = userList.FirstOrDefault();
+            var user = await _unitOfWork.Repository<User>()
+                               .GetFirstOrDefaultAsync(u => u.Id == createWalletDTO.UserId);
 
+            if (user is null) throw new UserNotFoundNullException();
 
-            var userPlan = user.Subscriptions.OrderByDescending(s => s.CreatedAt).FirstOrDefault()?.Plan.ToString() ?? SubscriptionPlan.Free.ToString();
-
-          
-            if (userPlan == SubscriptionPlan.Free.ToString())
+            if (!user.IsPremium)
             {
                 var walletCount = await _repo.CountAsync(w => w.UserId == createWalletDTO.UserId);
                 if (walletCount >= PlanLimits.FreeWalletLimit)

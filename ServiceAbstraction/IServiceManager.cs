@@ -20,5 +20,6 @@ namespace ServiceAbstraction
         IAnalyticsService AnalyticsService { get; }
         ICacheService CacheService { get; }
         ISubscriptionService SubscriptionService { get; }
+        IPaymentProvider PaymentProvider { get; }
     }
 }

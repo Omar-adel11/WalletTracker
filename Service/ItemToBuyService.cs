@@ -45,15 +45,13 @@ namespace Service
 
         public async Task<ItemToBuyDTO> AddItemAsync(int userId,CreateItemToBuyDTO createItemToBuy)
         {
-            var userList = await _unitOfWork.Repository<User>()
-                              .GetAsync(u => u.Id == userId);
-            var user = userList.FirstOrDefault();
+            var user = await _unitOfWork.Repository<User>()
+                              .GetFirstOrDefaultAsync(u => u.Id == userId);
+            
 
+            if (user is null) throw new UserNotFoundNullException();
 
-            var userPlan = user.Subscriptions.OrderByDescending(s => s.CreatedAt).FirstOrDefault()?.Plan.ToString() ?? SubscriptionPlan.Free.ToString();
-
-
-            if (userPlan == SubscriptionPlan.Free.ToString())
+            if (!user.IsPremium)
             {
                 var ItemCount = await _repo.CountAsync(w => w.UserId == userId);
                 if (ItemCount >= PlanLimits.FreeWalletLimit)
