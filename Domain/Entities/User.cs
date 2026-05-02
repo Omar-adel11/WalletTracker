@@ -18,6 +18,7 @@ namespace Domain.Entities
         public DateTimeOffset UpdatedAt { get; set; }
 
         public string? PictureUrl { get; set; }
+        public bool IsPremium { get; set; } = false;
 
         //Navigation properties
         public ICollection<Category>? Categories { get; set; } = new HashSet<Category>();
@@ -25,7 +26,8 @@ namespace Domain.Entities
         public ICollection<ItemToBuy>? ItemsToBuy { get; set; } = new HashSet<ItemToBuy>();
         public ICollection<Budget>? Budgets { get; set; } = new HashSet<Budget>();
         public ICollection<Installments>? Installments { get; set; } = new HashSet<Installments>();
-        public ICollection<Wallet> Wallets { get; set; } = null!;
+        public ICollection<Wallet> Wallets { get; set; } = new HashSet<Wallet>();
+        public ICollection<Subscription> Subscriptions { get; set; } = new HashSet<Subscription>();
 
     }
 }

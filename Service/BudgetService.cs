@@ -8,10 +8,13 @@ using Domain.Contracts;
 using Domain.Entities;
 using Domain.Entities.Enum;
 using Domain.Entities.Struct;
+using Domain.Exceptions.AuthExceptions;
 using Domain.Exceptions.BadRequestException;
 using Domain.Exceptions.NullReferenceException;
+using Service.Helper;
 using ServiceAbstraction;
 using ServiceAbstraction.DTOs.BudgetDTOs;
+using ServiceAbstraction.DTOs.WalletsDtos;
 using Shared;
 
 namespace Service
@@ -46,6 +49,17 @@ namespace Service
             if (IsExist) throw new CategoryExistException();
             var wallet = await _unitOfWork.Repository<Wallet>().GetByIdAsync(createBudgetDTO.WalletId);
             createBudgetDTO.Currency = wallet.Currency;
+            var user = await _unitOfWork.Repository<User>()
+                              .GetFirstOrDefaultAsync(u => u.Id == createBudgetDTO.UserId);
+            if (user is null) throw new UserNotFoundNullException();
+
+            if (!user.IsPremium)
+            {
+                var budgetCount = await _repo.CountAsync(w => w.UserId == createBudgetDTO.UserId);
+                if (budgetCount >= PlanLimits.FreeWalletLimit)
+                    throw new LimitExceededException(
+                        $"budget");
+            }
             var budget = _mapper.Map<Budget>(createBudgetDTO);
             budget.CreatedAt = DateTimeOffset.UtcNow;
             await _repo.AddAsync(budget);

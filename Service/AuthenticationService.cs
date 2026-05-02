@@ -2,12 +2,14 @@
 using System.Collections.Generic;
 using System.IdentityModel.Tokens.Jwt;
 using System.Linq;
+using System.Numerics;
 using System.Security.Claims;
 using System.Text;
 using System.Threading.Tasks;
 using AutoMapper;
 using Domain.Contracts;
 using Domain.Entities;
+using Domain.Entities.Enum;
 using Domain.Exceptions.AuthExceptions;
 using Domain.Exceptions.BadRequestException;
 using Domain.Exceptions.NullReferenceException;
@@ -35,13 +37,18 @@ namespace Service
             var isPasswordValid = await _userManager.CheckPasswordAsync(user, userLoginDTO.Password);
             if (!isPasswordValid) throw new UnAuthorizedException("Invalid Email or password.");
 
+            var userPlan = user.Subscriptions.OrderByDescending(s => s.CreatedAt).FirstOrDefault()?.Plan.ToString() ?? SubscriptionPlan.Free.ToString();
+ 
             var token = await GenerateTokenAsync(user);
             return new UserDTO
             {
                 Email = user.Email,
                 UserName = user.UserName,
                 PictureUrl = user.PictureUrl,
-                Token = token
+                Token = token,
+                Plan = userPlan,
+                IsPremium = userPlan == SubscriptionPlan.Premium.ToString()
+
             };
 
         }
@@ -77,7 +84,9 @@ namespace Service
                     Email = user.Email,
                     UserName = user.UserName,
                     PictureUrl = user.PictureUrl,
-                    Token = token
+                    Token = token,
+                    Plan = SubscriptionPlan.Free.ToString(),
+                    IsPremium = false
                 };
             
 
@@ -87,14 +96,20 @@ namespace Service
         {
             var user = await _userManager.FindByEmailAsync(Email);
             if (user is null) throw new UserNotFoundNullException();
+            var userPlan = user.Subscriptions.OrderByDescending(s => s.CreatedAt).FirstOrDefault()?.Plan.ToString() ?? SubscriptionPlan.Free.ToString();
+
             var token = await GenerateTokenAsync(user);
             return new UserDTO
             {
                 Email = user.Email,
                 UserName = user.UserName,
                 PictureUrl = user.PictureUrl,
-                Token = token
+                Token = token,
+                Plan = userPlan,
+                IsPremium = userPlan == SubscriptionPlan.Premium.ToString()
+
             };
+           
         }
 
         public async Task<bool> CheckEmailExistence(string Email)

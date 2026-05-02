@@ -11,6 +11,8 @@ namespace ServiceAbstraction.DTOs.Auth
         public string UserName { get; set; } = string.Empty;
         public string Email { get; set; } = string.Empty;
         public string? PictureUrl { get; set; }
+        public string Plan { get; set; } = "Free";
+        public bool IsPremium { get; set; }
         public string Token { get; set; } = string.Empty;
     }
 }

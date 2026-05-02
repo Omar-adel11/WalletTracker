@@ -22,6 +22,7 @@ using ServiceAbstraction.Helper.Email;
 using Shared.Errors;
 using StackExchange.Redis;
 using WalletTracker.Middlewares;
+using static Service.Helper.Paymob;
 
 namespace WalletTracker
 {
@@ -196,6 +197,15 @@ namespace WalletTracker
                 };
              
             });
+            #endregion
+
+            #region paymob
+            builder.Services.Configure<PaymobSettings>(builder.Configuration.GetSection("PaymobSettings"));
+
+            builder.Services.AddHttpClient<PaymobClient>();
+
+            builder.Services.AddScoped<ISubscriptionService, SubscriptionService>();
+            builder.Services.AddScoped<IPaymentProvider, PaymobProvider>();
             #endregion
 
             var app = builder.Build();
