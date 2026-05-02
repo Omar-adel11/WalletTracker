@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Security.Claims;
 using System.Text;
+using System.Text.Json;
 using System.Threading.Tasks;
 using Domain.Entities;
 using Microsoft.AspNetCore.Authorization;
@@ -31,21 +32,23 @@ namespace Presentation
         }
 
         // Paymob calls this after payment — NO [Authorize] here!
+        [AllowAnonymous]
         [HttpPost("webhook")]
         public async Task<IActionResult> Webhook()
         {
+
             using var reader = new StreamReader(Request.Body);
             var rawBody = await reader.ReadToEndAsync();
-
+           
             // Paymob sends the HMAC in this header
-            var hmacHeader = Request.Headers["HMAC"].ToString();
+            var hmacSignature = Request.Query["hmac"].ToString();
 
             await _serviceManager.SubscriptionService
-                .HandleWebhookAsync(rawBody, hmacHeader);
+                .HandleWebhookAsync(rawBody, hmacSignature);
 
-            return Ok(); // Always return 200 so Paymob doesn't retry
+            return Ok(); 
         }
-
+        
         [HttpGet("status")]
         [Authorize]
         public async Task<IActionResult> GetStatus()

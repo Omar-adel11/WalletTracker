@@ -16,5 +16,6 @@ namespace Service.Helper
         public string Currency { get; set; } = "EGP";
         public string NotificationUrl { get; set; } = string.Empty; // your webhook URL
         public string RedirectionUrl { get; set; } = string.Empty;  // frontend success page
+        public string IntegrationId { get; set; } = string.Empty;  // frontend success page
     }
 }

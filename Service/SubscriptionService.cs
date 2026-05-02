@@ -82,7 +82,7 @@ namespace Service
             var intention = new IntentionRequest(
                 amount: amountCents,
                 currency: _paymobOptions.Value.Currency,
-                payment_methods: new List<string> { "Online Card" },
+                payment_methods: new List<int> { int.Parse(_paymobOptions.Value.IntegrationId) },
                 items: new List<PaymobItem>
                 {
                     new PaymobItem(planName, amountCents,"Premium subscription", 1)
@@ -134,8 +134,8 @@ namespace Service
 
             // Extract our subscription_id from the extras/special_reference
             var extras = obj
-                .GetProperty("payment_key_claims")
-                .GetProperty("extras");
+    .GetProperty("payment_key_claims")
+    .GetProperty("extra"); 
 
             if (!extras.TryGetProperty("subscription_id", out var subIdEl))
                 return; // Not our webhook, ignore
@@ -170,17 +170,54 @@ namespace Service
 
         private void VerifyHmacSignature(string rawBody, string hmacHeader)
         {
-            
+            using var doc = JsonDocument.Parse(rawBody);
+            var obj = doc.RootElement.GetProperty("obj");
+
+            var data = BuildHmacString(obj);
+
             var keyBytes = Encoding.UTF8.GetBytes(_paymobOptions.Value.WebhookHmacSecret);
-            var bodyBytes = Encoding.UTF8.GetBytes(rawBody);
-
+            var dataBytes = Encoding.UTF8.GetBytes(data);
+            Console.WriteLine("HMAC STRING: " + data);
             using var hmac = new HMACSHA512(keyBytes);
-            var computed = Convert.ToHexString(hmac.ComputeHash(bodyBytes))
-                                  .ToLower();
-
+            var computed = BitConverter.ToString(hmac.ComputeHash(dataBytes))
+                .Replace("-", "")
+                .ToLower();
+            Console.WriteLine("=============computed==========");
+            Console.WriteLine("Computed: " + computed);
+            Console.WriteLine("-----------------------------------");
+            Console.WriteLine("=============hamc==========");
+            Console.WriteLine("Computed: " + hmac);
+            Console.WriteLine("-----------------------------------");
+            Console.WriteLine("============header==================");
+            Console.WriteLine("Header  : " + hmacHeader);
+            Console.WriteLine("--------------------------------------");
             if (computed != hmacHeader.ToLower())
                 throw new UnauthorizedAccessException("Invalid Paymob webhook signature.");
         }
-
+        private string BuildHmacString(JsonElement obj)
+        {
+            return string.Concat(
+                obj.GetProperty("amount_cents").ToString(),
+                obj.GetProperty("created_at").ToString(),
+                obj.GetProperty("currency").ToString(),
+                obj.GetProperty("error_occured").ToString().ToLower(),
+                obj.GetProperty("has_parent_transaction").ToString().ToLower(),
+                obj.GetProperty("id").ToString(),
+                obj.GetProperty("integration_id").ToString(),
+                obj.GetProperty("is_3d_secure").ToString().ToLower(),
+                obj.GetProperty("is_auth").ToString().ToLower(),
+                obj.GetProperty("is_capture").ToString().ToLower(),
+                obj.GetProperty("is_refunded").ToString().ToLower(),
+                obj.GetProperty("is_standalone_payment").ToString().ToLower(),
+                obj.GetProperty("is_voided").ToString().ToLower(), // ✅ FIX
+                obj.GetProperty("order").GetProperty("id").ToString(), // ✅ FIX
+                obj.GetProperty("owner").ToString(), // ✅ FIX
+                obj.GetProperty("pending").ToString().ToLower(), // ✅ FIX
+                obj.GetProperty("source_data").GetProperty("pan").ToString(),
+                obj.GetProperty("source_data").GetProperty("sub_type").ToString(),
+                obj.GetProperty("source_data").GetProperty("type").ToString(),
+                obj.GetProperty("success").ToString().ToLower()
+            );
+        }
     }
 }

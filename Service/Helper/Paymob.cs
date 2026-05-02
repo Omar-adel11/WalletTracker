@@ -21,7 +21,7 @@ namespace Service.Helper
         public record IntentionRequest(
             int amount,
             string currency,
-            List<string> payment_methods,
+            List<int> payment_methods,
             List<PaymobItem> items,
             BillingData billing_data,
             string notification_url,
@@ -58,10 +58,15 @@ namespace Service.Helper
                 var content = new StringContent(json, Encoding.UTF8, "application/json");
 
                 // Paymob v2 intention endpoint
-                var response = await _httpClient.PostAsync("/v1/intention", content);
+                var response = await _httpClient.PostAsync("https://accept.paymob.com/v1/intention", content);
 
                 var body = await response.Content.ReadAsStringAsync();
-
+                //if (!response.IsSuccessStatusCode)
+                //{
+                //    var errorJson = await response.Content.ReadAsStringAsync();
+                //    // Set a breakpoint here and inspect errorJson
+                //    Console.WriteLine(errorJson);
+                //}
                 if (!response.IsSuccessStatusCode)
                     throw new Exception($"Paymob error: {body}");
 
