@@ -27,4 +27,7 @@ namespace Domain.Exceptions.BadRequestException
     public sealed class CategoryExistException() : BadRequestException("Category is already Exist")
     {
     }
+    public sealed class LimitExceededException(string entity) : BadRequestException($"{entity} limit is Exceeded")
+    {
+    }
 }

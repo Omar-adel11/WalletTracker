@@ -35,8 +35,12 @@ namespace Presentation.Attributes
             var response = await cache.GetCacheValueAsync(cacheKey);
             if(response is not null)
             {
-                context.HttpContext.Response.ContentType = "application/json";
-                await context.HttpContext.Response.WriteAsync(response);
+                context.Result = new ContentResult()
+                {
+                    ContentType = "application/json",
+                    StatusCode = 200,
+                    Content = response
+                };
                 return;
             }
             var executedContext = await next.Invoke();

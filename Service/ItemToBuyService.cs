@@ -9,11 +9,14 @@ using Domain.Entities;
 using Domain.Entities.Enum;
 using Domain.Entities.Struct;
 using Domain.Exceptions.AuthExceptions;
+using Domain.Exceptions.BadRequestException;
 using Domain.Exceptions.MoneyInvalidOperationException;
 using Domain.Exceptions.NullReferenceException;
+using Service.Helper;
 using ServiceAbstraction;
 using ServiceAbstraction.DTOs.InstallmentsDTOs;
 using ServiceAbstraction.DTOs.ItemToBuyDTOs;
+using ServiceAbstraction.DTOs.WalletsDtos;
 using Shared;
 
 namespace Service
@@ -42,6 +45,22 @@ namespace Service
 
         public async Task<ItemToBuyDTO> AddItemAsync(int userId,CreateItemToBuyDTO createItemToBuy)
         {
+            var userList = await _unitOfWork.Repository<User>()
+                              .GetAsync(u => u.Id == userId);
+            var user = userList.FirstOrDefault();
+
+
+            var userPlan = user.Subscriptions.OrderByDescending(s => s.CreatedAt).FirstOrDefault()?.Plan.ToString() ?? SubscriptionPlan.Free.ToString();
+
+
+            if (userPlan == SubscriptionPlan.Free.ToString())
+            {
+                var ItemCount = await _repo.CountAsync(w => w.UserId == userId);
+                if (ItemCount >= PlanLimits.FreeWalletLimit)
+                    throw new LimitExceededException(
+                        $"Items");
+            }
+
             createItemToBuy.UserId = userId;
             var Item = _mapper.Map<ItemToBuy>(createItemToBuy);
             var wallet = await _unitOfWork.Repository<Wallet>().GetByIdAsync(createItemToBuy.WalletId);

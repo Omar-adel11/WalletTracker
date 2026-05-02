@@ -9,9 +9,12 @@ using Domain.Entities;
 using Domain.Entities.Enum;
 using Domain.Entities.Struct;
 using Domain.Exceptions.AuthExceptions;
+using Domain.Exceptions.BadRequestException;
 using Domain.Exceptions.MoneyInvalidOperationException;
 using Domain.Exceptions.NullReferenceException;
+using Service.Helper;
 using ServiceAbstraction;
+using ServiceAbstraction.DTOs.Auth;
 using ServiceAbstraction.DTOs.WalletsDtos;
 
 namespace Service
@@ -46,6 +49,21 @@ namespace Service
 
         public async Task<WalletDTO> CreateWalletAsync(CreateWalletDTO createWalletDTO)
         {
+            var userList = await _unitOfWork.Repository<User>()
+                                .GetAsync(u => u.Id == createWalletDTO.UserId);
+            var user = userList.FirstOrDefault();
+
+
+            var userPlan = user.Subscriptions.OrderByDescending(s => s.CreatedAt).FirstOrDefault()?.Plan.ToString() ?? SubscriptionPlan.Free.ToString();
+
+          
+            if (userPlan == SubscriptionPlan.Free.ToString())
+            {
+                var walletCount = await _repo.CountAsync(w => w.UserId == createWalletDTO.UserId);
+                if (walletCount >= PlanLimits.FreeWalletLimit)
+                    throw new LimitExceededException(
+                        $"wallet");
+            }
             var wallet = _mapper.Map<Wallet>(createWalletDTO);
             await _repo.AddAsync(wallet);
             await _unitOfWork.CompleteAsync();

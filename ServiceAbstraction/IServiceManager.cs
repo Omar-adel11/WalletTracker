@@ -19,5 +19,6 @@ namespace ServiceAbstraction
         IInstallmentsService InstallmentsService { get; }
         IAnalyticsService AnalyticsService { get; }
         ICacheService CacheService { get; }
+        ISubscriptionService SubscriptionService { get; }
     }
 }
