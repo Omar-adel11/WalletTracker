@@ -16,6 +16,7 @@ namespace Presentation
 {
     [ApiController]
     [Route("api/[controller]")]
+    [Authorize]
     public class SubscriptionController(IServiceManager _serviceManager) : ControllerBase
     {
         private int UserId => int.Parse(
@@ -23,7 +24,6 @@ namespace Presentation
 
         // Returns client_secret → frontend uses it with Paymob SDK
         [HttpPost("initiate")]
-        [Authorize]
         public async Task<IActionResult> InitiatePayment([FromBody] InitiatePaymentDTO dto)
         {
             var result = await _serviceManager.PaymentProvider
@@ -50,7 +50,6 @@ namespace Presentation
         }
         
         [HttpGet("status")]
-        [Authorize]
         public async Task<IActionResult> GetStatus()
         {
             var status = await _serviceManager.SubscriptionService
