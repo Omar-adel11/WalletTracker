@@ -103,7 +103,20 @@ Edit `WalletTracker/appsettings.json`:
       "Password": "Password123!",
       "FirstName": "Super",
       "LastName": "Admin"
-    }
+    }.
+{
+"PaymobSettings": {
+    "SecretKey": "",
+    "PublicKey": "",
+    "WebhookHmacSecret": "",
+    "BaseUrl": "https://accept.paymob.com",
+    "PremiumAmountCents": 69900,
+    "Currency": "EGP",
+    "NotificationUrl": "",
+    "RedirectionUrl": "",
+    "IntegrationId": 1234567
+
+}
   }
 }
 ```
